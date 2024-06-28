@@ -207,13 +207,20 @@ class _CameraPageState extends State<CameraPage> {
   }
 
   Widget _buildCameraPreview() {
-    return Center(
-      child: AspectRatio(
-        aspectRatio: controller!.value.aspectRatio,
-        child: CameraPreview(controller!),
+  return Center(
+    child: Container(
+      width: MediaQuery.of(context).size.width * 0.8, // 화면 너비의 80%
+      height: MediaQuery.of(context).size.height * 0.6, // 화면 높이의 60%
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20), // 모서리를 둥글게
+        child: AspectRatio(
+          aspectRatio: controller!.value.aspectRatio,
+          child: CameraPreview(controller!),
+        ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildCountdownOverlay() {
     return Center(
