@@ -5,12 +5,17 @@ import 'package:camera/camera.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:path/path.dart' as path;
 import 'package:intl/intl.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 List<CameraDescription> cameras = [];
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  cameras = await availableCameras();
+  try {
+    cameras = await availableCameras();
+  } on CameraException catch (e) {
+    print('Error in fetching the cameras: $e');
+  }
   runApp(const MyApp());
 }
 
@@ -36,6 +41,8 @@ class CameraPage extends StatefulWidget {
 
 class _CameraPageState extends State<CameraPage> {
   CameraController? controller;
+  bool _isCameraInitialized = false;
+  bool _isCameraPermissionGranted = false;
   Timer? _timer;
   bool _isCapturing = false;
   int _countdown = 3;
@@ -45,20 +52,6 @@ class _CameraPageState extends State<CameraPage> {
   int _captureInterval = 3;
   DateTime? _startTime;
   DateTime? _endTime;
-
-  CameraDescription? _getDefaultCamera() {
-    final backCameras = cameras
-        .where((camera) => camera.lensDirection == CameraLensDirection.back);
-    final frontCameras = cameras
-        .where((camera) => camera.lensDirection == CameraLensDirection.front);
-
-    if (backCameras.isNotEmpty) {
-      return backCameras.first;
-    } else if (frontCameras.isNotEmpty) {
-      return frontCameras.first;
-    }
-    return null;
-  }
 
   @override
   void initState() {
@@ -75,20 +68,43 @@ class _CameraPageState extends State<CameraPage> {
   }
 
   Future<void> _initializeCamera() async {
-    final defaultCamera = _getDefaultCamera();
-    if (defaultCamera == null) {
-      _showSnackBar('No cameras available');
+    if (kIsWeb) {
+      _isCameraPermissionGranted = await _requestCameraPermissionWeb();
+    } else {
+      // 모바일 플랫폼을 위한 권한 요청 로직 (필요시 추가)
+      _isCameraPermissionGranted = true;
+    }
+
+    if (!_isCameraPermissionGranted) {
+      _showSnackBar('Camera permission is required');
       return;
     }
 
-    controller = CameraController(defaultCamera, ResolutionPreset.max);
+    final cameras = await availableCameras();
+    if (cameras.isEmpty) {
+      _showSnackBar('No camera available');
+      return;
+    }
+
+    final camera = cameras.first;
+    controller = CameraController(camera, ResolutionPreset.max);
 
     try {
       await controller!.initialize();
-      if (mounted) setState(() {});
-    } catch (e) {
-      _showSnackBar('Error initializing camera: $e');
+      if (mounted) {
+        setState(() {
+          _isCameraInitialized = true;
+        });
+      }
+    } on CameraException catch (e) {
+      _showSnackBar('Error initializing camera: ${e.description}');
     }
+  }
+
+  Future<bool> _requestCameraPermissionWeb() async {
+    final permissions =
+        await html.window.navigator.permissions?.query({'name': 'camera'});
+    return permissions?.state == 'granted';
   }
 
   void _toggleCapturing() {
@@ -98,12 +114,13 @@ class _CameraPageState extends State<CameraPage> {
         _startTime = DateTime.now();
         _endTime = null;
         _startStopwatch();
+        _startCapturing();
       } else {
         _endTime = DateTime.now();
         _stopStopwatch();
+        _stopCapturing();
       }
     });
-    _isCapturing ? _startCapturing() : _stopCapturing();
   }
 
   void _startCapturing() {
@@ -167,14 +184,18 @@ class _CameraPageState extends State<CameraPage> {
       final String fileName =
           '${path.basenameWithoutExtension(image.path)}_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-      await _downloadImage(bytes, fileName);
+      if (kIsWeb) {
+        await _downloadImageWeb(bytes, fileName);
+      } else {
+        // 모바일 플랫폼을 위한 이미지 저장 로직 (필요시 추가)
+      }
       _showSnackBar('Picture saved as $fileName');
     } catch (e) {
       _showSnackBar('Error taking picture: $e');
     }
   }
 
-  Future<void> _downloadImage(Uint8List bytes, String fileName) async {
+  Future<void> _downloadImageWeb(Uint8List bytes, String fileName) async {
     final blob = html.Blob([bytes]);
     final url = html.Url.createObjectUrlFromBlob(blob);
     final anchor = html.document.createElement('a') as html.AnchorElement
@@ -189,48 +210,6 @@ class _CameraPageState extends State<CameraPage> {
     html.Url.revokeObjectUrl(url);
   }
 
-  void _switchCamera() {
-    if (cameras.length < 2) {
-      _showSnackBar('Only one camera available');
-      return;
-    }
-
-    final currentDirection = controller!.description.lensDirection;
-    CameraDescription? newCamera;
-
-    if (currentDirection == CameraLensDirection.back) {
-      newCamera = cameras.firstWhere(
-        (camera) => camera.lensDirection == CameraLensDirection.front,
-        orElse: () => cameras.first,
-      );
-    } else {
-      newCamera = cameras.firstWhere(
-        (camera) => camera.lensDirection == CameraLensDirection.back,
-        orElse: () => cameras.first,
-      );
-    }
-
-    if (newCamera != null) {
-      _initializeCameraWithDescription(newCamera);
-    }
-  }
-
-  Future<void> _initializeCameraWithDescription(
-      CameraDescription cameraDescription) async {
-    if (controller != null) {
-      await controller!.dispose();
-    }
-
-    controller = CameraController(cameraDescription, ResolutionPreset.max);
-
-    try {
-      await controller!.initialize();
-      if (mounted) setState(() {});
-    } catch (e) {
-      _showSnackBar('Error initializing camera: $e');
-    }
-  }
-
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
@@ -238,7 +217,7 @@ class _CameraPageState extends State<CameraPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (controller == null || !controller!.value.isInitialized) {
+    if (!_isCameraInitialized || controller == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     return Scaffold(
@@ -247,7 +226,6 @@ class _CameraPageState extends State<CameraPage> {
         children: [
           _buildCameraPreview(),
           if (_isCapturing) _buildCountdownOverlay(),
-          _buildCameraSwitchButton(),
           _buildTimeDisplay(),
           _buildIntervalSelector(),
         ],
@@ -259,14 +237,11 @@ class _CameraPageState extends State<CameraPage> {
   Widget _buildCameraPreview() {
     return Center(
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.8, // 화면 너비의 80%
-        height: MediaQuery.of(context).size.height * 0.6, // 화면 높이의 60%
+        width: MediaQuery.of(context).size.width * 0.8,
+        height: MediaQuery.of(context).size.height * 0.6,
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(20), // 모서리를 둥글게
-          child: AspectRatio(
-            aspectRatio: controller!.value.aspectRatio,
-            child: CameraPreview(controller!),
-          ),
+          borderRadius: BorderRadius.circular(20),
+          child: CameraPreview(controller!),
         ),
       ),
     );
@@ -285,20 +260,6 @@ class _CameraPageState extends State<CameraPage> {
                 blurRadius: 10.0, color: Colors.black, offset: Offset(5.0, 5.0))
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildCameraSwitchButton() {
-    return Positioned(
-      top: 20,
-      right: 20,
-      child: FloatingActionButton(
-        child: Icon(Icons.flip_camera_ios),
-        onPressed: _switchCamera,
-        mini: true,
-        backgroundColor: Colors.white.withOpacity(0.7),
-        foregroundColor: Colors.black,
       ),
     );
   }
@@ -325,25 +286,13 @@ class _CameraPageState extends State<CameraPage> {
               style: TextStyle(color: Colors.white, fontSize: 14),
             ),
             Text(
-              'Duration: ${_isCapturing ? _formatStopwatchTime() : _formatElapsedTime()}',
+              'Duration: ${_isCapturing ? _formatStopwatchTime() : _formatStopwatchTime()}',
               style: TextStyle(color: Colors.white, fontSize: 18),
             ),
           ],
         ),
       ),
     );
-  }
-
-  String _formatElapsedTime() {
-    final duration = _stopwatch.elapsed;
-    final milliseconds = duration.inMilliseconds;
-    int hundreds = (milliseconds / 10).truncate();
-    int seconds = (hundreds / 100).truncate();
-    int minutes = (seconds / 60).truncate();
-
-    return "${(minutes % 60).toString().padLeft(2, '0')}:"
-        "${(seconds % 60).toString().padLeft(2, '0')}:"
-        "${(hundreds % 100).toString().padLeft(2, '0')}";
   }
 
   Widget _buildIntervalSelector() {
