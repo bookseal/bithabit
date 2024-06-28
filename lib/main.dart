@@ -85,7 +85,22 @@ class _CameraPageState extends State<CameraPage> {
       return;
     }
 
-    await _initializeCameraAtIndex(0);
+    // 후면 카메라 찾기
+    int cameraIndex = cameras.indexWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.back);
+
+    // 후면 카메라가 없으면 전면 카메라 찾기
+    if (cameraIndex == -1) {
+      cameraIndex = cameras.indexWhere(
+          (camera) => camera.lensDirection == CameraLensDirection.front);
+    }
+
+    // 여전히 카메라를 찾지 못했다면 첫 번째 카메라 사용
+    if (cameraIndex == -1) {
+      cameraIndex = 0;
+    }
+
+    await _initializeCameraAtIndex(cameraIndex);
   }
 
   Future<void> _initializeCameraAtIndex(int index) async {
