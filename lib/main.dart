@@ -46,10 +46,24 @@ class _CameraPageState extends State<CameraPage> {
   DateTime? _startTime;
   DateTime? _endTime;
 
+  CameraDescription? _getDefaultCamera() {
+    final backCameras = cameras
+        .where((camera) => camera.lensDirection == CameraLensDirection.back);
+    final frontCameras = cameras
+        .where((camera) => camera.lensDirection == CameraLensDirection.front);
+
+    if (backCameras.isNotEmpty) {
+      return backCameras.first;
+    } else if (frontCameras.isNotEmpty) {
+      return frontCameras.first;
+    }
+    return null;
+  }
+
   @override
   void initState() {
     super.initState();
-    _initializeCamera(_selectedCameraIndex);
+    _initializeCamera();
   }
 
   @override
@@ -60,13 +74,14 @@ class _CameraPageState extends State<CameraPage> {
     super.dispose();
   }
 
-  Future<void> _initializeCamera(int cameraIndex) async {
-    if (cameras.isEmpty) {
+  Future<void> _initializeCamera() async {
+    final defaultCamera = _getDefaultCamera();
+    if (defaultCamera == null) {
       _showSnackBar('No cameras available');
       return;
     }
 
-    controller = CameraController(cameras[cameraIndex], ResolutionPreset.max);
+    controller = CameraController(defaultCamera, ResolutionPreset.max);
 
     try {
       await controller!.initialize();
@@ -115,7 +130,8 @@ class _CameraPageState extends State<CameraPage> {
 
   void _startStopwatch() {
     _stopwatch.start();
-    _stopwatchTimer = Timer.periodic(const Duration(milliseconds: 100), (_) => setState(() {}));
+    _stopwatchTimer = Timer.periodic(
+        const Duration(milliseconds: 100), (_) => setState(() {}));
   }
 
   void _stopStopwatch() {
@@ -130,8 +146,8 @@ class _CameraPageState extends State<CameraPage> {
     int minutes = (seconds / 60).truncate();
 
     return "${(minutes % 60).toString().padLeft(2, '0')}:"
-           "${(seconds % 60).toString().padLeft(2, '0')}:"
-           "${(hundreds % 100).toString().padLeft(2, '0')}";
+        "${(seconds % 60).toString().padLeft(2, '0')}:"
+        "${(hundreds % 100).toString().padLeft(2, '0')}";
   }
 
   String _formatDateTime(DateTime? dateTime) {
@@ -148,7 +164,8 @@ class _CameraPageState extends State<CameraPage> {
     try {
       final XFile image = await controller!.takePicture();
       final Uint8List bytes = await image.readAsBytes();
-      final String fileName = '${path.basenameWithoutExtension(image.path)}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final String fileName =
+          '${path.basenameWithoutExtension(image.path)}_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
       await _downloadImage(bytes, fileName);
       _showSnackBar('Picture saved as $fileName');
@@ -178,12 +195,45 @@ class _CameraPageState extends State<CameraPage> {
       return;
     }
 
-    _selectedCameraIndex = (_selectedCameraIndex + 1) % cameras.length;
-    _initializeCamera(_selectedCameraIndex);
+    final currentDirection = controller!.description.lensDirection;
+    CameraDescription? newCamera;
+
+    if (currentDirection == CameraLensDirection.back) {
+      newCamera = cameras.firstWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.front,
+        orElse: () => cameras.first,
+      );
+    } else {
+      newCamera = cameras.firstWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.back,
+        orElse: () => cameras.first,
+      );
+    }
+
+    if (newCamera != null) {
+      _initializeCameraWithDescription(newCamera);
+    }
+  }
+
+  Future<void> _initializeCameraWithDescription(
+      CameraDescription cameraDescription) async {
+    if (controller != null) {
+      await controller!.dispose();
+    }
+
+    controller = CameraController(cameraDescription, ResolutionPreset.max);
+
+    try {
+      await controller!.initialize();
+      if (mounted) setState(() {});
+    } catch (e) {
+      _showSnackBar('Error initializing camera: $e');
+    }
   }
 
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -207,20 +257,20 @@ class _CameraPageState extends State<CameraPage> {
   }
 
   Widget _buildCameraPreview() {
-  return Center(
-    child: Container(
-      width: MediaQuery.of(context).size.width * 0.8, // 화면 너비의 80%
-      height: MediaQuery.of(context).size.height * 0.6, // 화면 높이의 60%
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20), // 모서리를 둥글게
-        child: AspectRatio(
-          aspectRatio: controller!.value.aspectRatio,
-          child: CameraPreview(controller!),
+    return Center(
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.8, // 화면 너비의 80%
+        height: MediaQuery.of(context).size.height * 0.6, // 화면 높이의 60%
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20), // 모서리를 둥글게
+          child: AspectRatio(
+            aspectRatio: controller!.value.aspectRatio,
+            child: CameraPreview(controller!),
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildCountdownOverlay() {
     return Center(
@@ -230,7 +280,10 @@ class _CameraPageState extends State<CameraPage> {
           fontSize: 72,
           fontWeight: FontWeight.bold,
           color: Colors.white,
-          shadows: [Shadow(blurRadius: 10.0, color: Colors.black, offset: Offset(5.0, 5.0))],
+          shadows: [
+            Shadow(
+                blurRadius: 10.0, color: Colors.black, offset: Offset(5.0, 5.0))
+          ],
         ),
       ),
     );
@@ -289,8 +342,8 @@ class _CameraPageState extends State<CameraPage> {
     int minutes = (seconds / 60).truncate();
 
     return "${(minutes % 60).toString().padLeft(2, '0')}:"
-           "${(seconds % 60).toString().padLeft(2, '0')}:"
-           "${(hundreds % 100).toString().padLeft(2, '0')}";
+        "${(seconds % 60).toString().padLeft(2, '0')}:"
+        "${(hundreds % 100).toString().padLeft(2, '0')}";
   }
 
   Widget _buildIntervalSelector() {
