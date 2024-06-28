@@ -80,20 +80,27 @@ class _CameraPageState extends State<CameraPage> {
       return;
     }
 
-    final cameras = await availableCameras();
     if (cameras.isEmpty) {
       _showSnackBar('No camera available');
       return;
     }
 
-    final camera = cameras.first;
-    controller = CameraController(camera, ResolutionPreset.max);
+    await _initializeCameraAtIndex(0);
+  }
+
+  Future<void> _initializeCameraAtIndex(int index) async {
+    if (controller != null) {
+      await controller!.dispose();
+    }
+
+    controller = CameraController(cameras[index], ResolutionPreset.max);
 
     try {
       await controller!.initialize();
       if (mounted) {
         setState(() {
           _isCameraInitialized = true;
+          _selectedCameraIndex = index;
         });
       }
     } on CameraException catch (e) {
@@ -210,6 +217,12 @@ class _CameraPageState extends State<CameraPage> {
     html.Url.revokeObjectUrl(url);
   }
 
+  void _switchCamera() {
+    if (cameras.length < 2) return;
+    final nextIndex = (_selectedCameraIndex + 1) % cameras.length;
+    _initializeCameraAtIndex(nextIndex);
+  }
+
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
@@ -228,6 +241,7 @@ class _CameraPageState extends State<CameraPage> {
           if (_isCapturing) _buildCountdownOverlay(),
           _buildTimeDisplay(),
           _buildIntervalSelector(),
+          if (!kIsWeb) _buildCameraSwitchButton(),
         ],
       ),
       floatingActionButton: _buildCaptureButton(),
@@ -260,6 +274,18 @@ class _CameraPageState extends State<CameraPage> {
                 blurRadius: 10.0, color: Colors.black, offset: Offset(5.0, 5.0))
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCameraSwitchButton() {
+    return Positioned(
+      top: 20,
+      right: 20,
+      child: FloatingActionButton(
+        child: Icon(Icons.switch_camera),
+        mini: true,
+        onPressed: _switchCamera,
       ),
     );
   }
