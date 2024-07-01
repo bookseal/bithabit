@@ -227,7 +227,10 @@ async function createAndDisplayGif() {
             height: capturedImages[0].naturalHeight
         });
 
-        capturedImages.forEach(img => gif.addFrame(img, {delay: 100}));
+        // Add frames in reverse order
+        for (let i = capturedImages.length - 1; i >= 0; i--) {
+            gif.addFrame(capturedImages[i], {delay: 100});
+        }
 
         gif.on('finished', function(blob) {
             const gifUrl = URL.createObjectURL(blob);
