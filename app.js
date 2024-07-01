@@ -1,4 +1,4 @@
-const CAPTURE_INTERVAL = 1; // Capture interval in seconds
+const CAPTURE_INTERVAL = 1;
 
 let stream;
 let videoElement;
@@ -65,37 +65,42 @@ function startCapturing() {
     startTime = new Date();
     updateTimeDisplay();
     durationInterval = setInterval(updateDuration, 1000);
-    countdown = CAPTURE_INTERVAL;
-    startCountdown();
+    showRecordingMessage();
+    captureInterval = setInterval(captureImage, CAPTURE_INTERVAL * 1000);
 }
 
-function startCountdown() {
+function showRecordingMessage() {
     countdownElement.classList.remove('d-none');
-    updateCountdown();
-    countdownInterval = setInterval(updateCountdown, 1000);
+    countdownElement.textContent = "Recording";
 }
 
-function updateCountdown() {
-    if (!isCapturing) {
-        clearInterval(countdownInterval);
-        countdownElement.classList.add('d-none');
-        return;
-    }
+// function startCountdown() {
+//     countdownElement.classList.remove('d-none');
+//     updateCountdown();
+//     countdownInterval = setInterval(updateCountdown, 1000);
+// }
 
-    if (countdown > 0) {
-        countdownElement.textContent = "Recording";
-        countdown--;
-    } else {
-        countdownElement.textContent = '찰칵';
-        clearInterval(countdownInterval);
-        captureImage();
-        countdown = CAPTURE_INTERVAL;
-        setTimeout(startCountdown, 100);
-    }
-}
+// function updateCountdown() {
+//     if (!isCapturing) {
+//         clearInterval(countdownInterval);
+//         countdownElement.classList.add('d-none');
+//         return;
+//     }
+
+//     if (countdown > 0) {
+//         countdownElement.textContent = "Recording";
+//         countdown--;
+//     } else {
+//         countdownElement.textContent = '찰칵';
+//         clearInterval(countdownInterval);
+//         captureImage();
+//         countdown = CAPTURE_INTERVAL;
+//         setTimeout(startCountdown, 100);
+//     }
+// }
 
 function stopCapturing() {
-    clearInterval(countdownInterval);
+    clearInterval(captureInterval);
     clearInterval(durationInterval);
     countdownElement.classList.add('d-none');
     isCapturing = false;
@@ -117,6 +122,7 @@ function toggleCapturing() {
         createAndDisplayGif();
     }
 }
+
 
 function drawOverlay(context, canvasWidth, canvasHeight, barHeight) {
     const centerY = (canvasHeight - barHeight) / 2;
@@ -304,7 +310,7 @@ function cleanup() {
         stream.getTracks().forEach(track => track.stop());
     }
     isCapturing = false;
-    clearInterval(countdownInterval);
+    clearInterval(captureInterval);
     clearInterval(durationInterval);
     countdownElement.classList.add('d-none');
     if (captureBtn) {
