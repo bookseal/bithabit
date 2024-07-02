@@ -1,4 +1,4 @@
-const CAPTURE_INTERVAL = 1;
+const CAPTURE_INTERVAL = 5;
 
 let stream;
 let videoElement;
@@ -18,6 +18,8 @@ let startTime;
 let duration;
 let durationInterval;
 let currentFacingMode = 'environment';
+let isCapturingComplete = false;
+
 
 document.addEventListener('DOMContentLoaded', initializeApp);
 
@@ -66,6 +68,11 @@ function startCapturing() {
     updateTimeDisplay();
     durationInterval = setInterval(updateDuration, 1000);
     showRecordingMessage();
+    
+    // Capture an image immediately when starting
+    captureImage();
+    
+    // Set interval for subsequent captures
     captureInterval = setInterval(captureImage, CAPTURE_INTERVAL * 1000);
 }
 
@@ -74,32 +81,10 @@ function showRecordingMessage() {
     countdownElement.textContent = "Recording";
 }
 
-// function startCountdown() {
-//     countdownElement.classList.remove('d-none');
-//     updateCountdown();
-//     countdownInterval = setInterval(updateCountdown, 1000);
-// }
-
-// function updateCountdown() {
-//     if (!isCapturing) {
-//         clearInterval(countdownInterval);
-//         countdownElement.classList.add('d-none');
-//         return;
-//     }
-
-//     if (countdown > 0) {
-//         countdownElement.textContent = "Recording";
-//         countdown--;
-//     } else {
-//         countdownElement.textContent = '찰칵';
-//         clearInterval(countdownInterval);
-//         captureImage();
-//         countdown = CAPTURE_INTERVAL;
-//         setTimeout(startCountdown, 100);
-//     }
-// }
-
 function stopCapturing() {
+    // Capture a final image before stopping
+    captureImage();
+    
     clearInterval(captureInterval);
     clearInterval(durationInterval);
     countdownElement.classList.add('d-none');
@@ -119,10 +104,18 @@ function toggleCapturing() {
         captureBtn.innerHTML = '<i class="fas fa-camera"></i> Start';
         captureBtn.classList.remove('btn-danger');
         switchCameraBtn.disabled = false;
-        createAndDisplayGif();
+        // Wait for the final capture to complete before creating the GIF
+        waitForFinalCapture();
     }
 }
 
+function waitForFinalCapture() {
+    if (isCapturingComplete) {
+        createAndDisplayGif();
+    } else {
+        setTimeout(waitForFinalCapture, 100); // Check again in 100ms
+    }
+}
 
 function drawOverlay(context, canvasWidth, canvasHeight, barHeight) {
     const centerY = (canvasHeight - barHeight) / 2;
@@ -153,9 +146,9 @@ function drawOverlay(context, canvasWidth, canvasHeight, barHeight) {
     context.fillText(dateTimeText, canvasWidth / 2, bottomY);
 }
 
-function captureImage() {
-    if (!isCapturing) return;
 
+function captureImage() {
+    isCapturingComplete = false;
     const context = canvasElement.getContext('2d');
     const barHeight = 50;
 
@@ -169,7 +162,15 @@ function captureImage() {
     const imgElement = document.createElement('img');
     imgElement.src = imageDataUrl;
     imgElement.className = 'captured-image';
-    capturedImagesContainer.prepend(imgElement);
+    imgElement.onload = () => {
+        capturedImagesContainer.prepend(imgElement);
+        // Limit the number of displayed images (e.g., to 20)
+        const maxDisplayedImages = 20;
+        while (capturedImagesContainer.children.length > maxDisplayedImages) {
+            capturedImagesContainer.removeChild(capturedImagesContainer.lastChild);
+        }
+        isCapturingComplete = true;
+    };
 }
 
 async function switchCamera() {
