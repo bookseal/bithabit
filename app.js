@@ -1,4 +1,4 @@
-const CAPTURE_INTERVAL = 5;
+const CAPTURE_INTERVAL = 3;
 
 let stream;
 let videoElement;
@@ -19,6 +19,7 @@ let duration;
 let durationInterval;
 let currentFacingMode = 'environment';
 let isCapturingComplete = false;
+let blobUrl; // 전역 변수로 선언하여 다른 함수에서도 접근 가능하게 합니다.
 
 
 document.addEventListener('DOMContentLoaded', initializeApp);
@@ -234,6 +235,7 @@ async function createAndDisplayGif() {
         }
 
         gif.on('finished', function(blob) {
+			createShareableLink(blob);
             const gifUrl = URL.createObjectURL(blob);
             displayGif(gifUrl);
             document.body.removeChild(loadingIndicator);
@@ -244,6 +246,50 @@ async function createAndDisplayGif() {
         console.error("Error in GIF generation process:", error);
         document.body.removeChild(loadingIndicator);
         alert("An error occurred while creating the GIF. Please try again.");
+    }
+}
+
+function createShareableLink(blob) {
+    if (blobUrl) {
+        URL.revokeObjectURL(blobUrl); // 기존 URL이 있다면 해제
+    }
+    blobUrl = URL.createObjectURL(blob);
+    setupShareButton(blobUrl);
+}
+
+function setupShareButton(blobUrl) {
+	const shareButton = document.getElementById('shareButton');
+	shareButton.addEventListener('click', () => shareGif(blobUrl));
+}
+
+
+function createShareableLink(blob) {
+    if (blobUrl) {
+        URL.revokeObjectURL(blobUrl); // 기존 URL이 있다면 해제
+    }
+    blobUrl = URL.createObjectURL(blob);
+    setupShareButton(blobUrl);
+}
+
+function cleanup() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+    isCapturing = false;
+    clearInterval(captureInterval);
+    clearInterval(durationInterval);
+    countdownElement.classList.add('d-none');
+    if (captureBtn) {
+        captureBtn.innerHTML = '<i class="fas fa-camera"></i> Start';
+        captureBtn.classList.remove('btn-danger');
+    }
+    if (switchCameraBtn) switchCameraBtn.disabled = false;
+    updateTimeDisplay();
+
+    // Blob URL 해제
+    if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+        blobUrl = null;
     }
 }
 
@@ -261,17 +307,49 @@ function displayGif(gifUrl) {
     gifImage.style.maxWidth = '100%';
     gifContainer.appendChild(gifImage);
 
+    const now = new Date();
+    const date = now.toLocaleDateString().replace(/\//g, '-'); // 날짜 형식을 "yyyy-mm-dd"로 변환
+    const time = now.toLocaleTimeString().replace(/:/g, '-'); // 시간 형식을 "HH-MM-SS"로 변환
+    const fileName = `BitHabit-${date}-${time}.gif`;
+
     const downloadButton = document.createElement('a');
     downloadButton.href = gifUrl;
-    downloadButton.download = 'generated_gif.gif';
-    downloadButton.textContent = 'Download GIF';
+    downloadButton.download = fileName;
+    downloadButton.textContent = '다운로드';
     downloadButton.className = 'btn btn-primary mt-2';
     gifContainer.appendChild(downloadButton);
+
+    const shareButton = document.createElement('button');
+    shareButton.textContent = '결과를 카톡에 공유';
+    shareButton.className = 'btn btn-secondary mt-2 ml-2';
+    shareButton.addEventListener('click', () => shareGif(gifUrl, fileName));
+    gifContainer.appendChild(shareButton);
 
     gifContainer.style.display = 'block';
     setTimeout(() => {
         gifContainer.scrollIntoView({behavior: 'smooth', block: 'start'});
     }, 100);
+}
+
+async function shareGif(blobUrl, fileName) {
+    try {
+        const response = await fetch(blobUrl);
+        const blob = await response.blob();
+        const file = new File([blob], fileName, { type: "image/gif" });
+        
+        if (navigator.share) {
+            await navigator.share({
+                files: [file],
+                title: 'Check out this GIF!',
+                text: fileName
+            });
+        } else {
+            // 대체 공유 방법 (예: 링크 복사)
+            alert('직접 공유가 지원되지 않습니다. URL을 복사해 주세요: ' + blobUrl);
+        }
+    } catch (error) {
+        console.error('공유 중 오류 발생:', error);
+    }
 }
 
 // Utility functions
@@ -308,7 +386,6 @@ function checkDeviceSupport() {
     }
     return true;
 }
-
 function cleanup() {
     if (stream) {
         stream.getTracks().forEach(track => track.stop());
@@ -323,8 +400,13 @@ function cleanup() {
     }
     if (switchCameraBtn) switchCameraBtn.disabled = false;
     updateTimeDisplay();
-}
 
+    // Blob URL 해제
+    if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+        blobUrl = null;
+    }
+}
 window.addEventListener('beforeunload', cleanup);
 
 window.addEventListener('unhandledrejection', function(event) {
