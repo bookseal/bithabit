@@ -1,4 +1,4 @@
-const CAPTURE_INTERVAL = 3;
+const CAPTURE_INTERVAL = 15;
 
 let stream;
 let videoElement;
@@ -166,7 +166,7 @@ function captureImage() {
     imgElement.onload = () => {
         capturedImagesContainer.prepend(imgElement);
         // Limit the number of displayed images (e.g., to 20)
-        const maxDisplayedImages = 20;
+        const maxDisplayedImages = 200;
         while (capturedImagesContainer.children.length > maxDisplayedImages) {
             capturedImagesContainer.removeChild(capturedImagesContainer.lastChild);
         }
@@ -344,7 +344,6 @@ async function shareGif(blobUrl, fileName) {
                 text: fileName
             });
         } else {
-            // 대체 공유 방법 (예: 링크 복사)
             alert('직접 공유가 지원되지 않습니다. URL을 복사해 주세요: ' + blobUrl);
         }
     } catch (error) {
@@ -352,7 +351,6 @@ async function shareGif(blobUrl, fileName) {
     }
 }
 
-// Utility functions
 function formatDuration(ms) {
     if (!ms) return '00:00:00';
     const totalSeconds = Math.floor(ms / 1000);
