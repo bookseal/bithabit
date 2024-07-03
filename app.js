@@ -41,11 +41,12 @@ async function initializeApp() {
     captureBtn.addEventListener('click', toggleCapturing);
     switchCameraBtn.addEventListener('click', switchCamera);
 
-    try {
+
+	try {
         await initializeCamera();
     } catch (error) {
-        console.error('Camera initialization error:', error);
-        errorMessageElement.textContent = 'Unable to initialize the camera. Please check your permissions and refresh the page.';
+        handleError(error, 'Camera initialization failed. The application cannot run.');
+        return; // 초기화 중단
     }
 }
 
@@ -104,19 +105,6 @@ function disableAllCameraFunctions() {
     // 추가적인 UI 요소들도 필요에 따라 비활성화
 }
 
-// 기존의 initializeApp 함수 내에서 initializeCamera 호출 후 에러 처리
-export async function initializeApp() {
-    // ... 기존 코드 ...
-
-    try {
-        await initializeCamera();
-    } catch (error) {
-        handleError(error, 'Camera initialization failed. The application cannot run.');
-        return; // 초기화 중단
-    }
-
-    // ... 나머지 초기화 코드 ...
-}
 
 function startCapturing() {
     startTime = new Date();
