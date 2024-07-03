@@ -51,17 +51,71 @@ async function initializeApp() {
 
 async function initializeCamera() {
     try {
+        // 브라우저의 카메라 지원 여부 확인
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error('Your browser does not support camera access');
+        }
+
+        // 사용 가능한 카메라 목록 가져오기
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+
+        if (videoDevices.length === 0) {
+            throw new Error('No camera detected on this device');
+        }
+
         currentFacingMode = isMobileDevice() ? 'environment' : 'user';
-        stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: currentFacingMode } 
+        
+        // 카메라 접근 시도
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: currentFacingMode }
         });
+
         videoElement.srcObject = stream;
         console.log('Camera access successful');
+
     } catch (error) {
         console.error('Camera access error:', error);
-        errorMessageElement.textContent = 'Unable to access the camera. Please check your permissions and try again.';
+        
+        let errorMessage = 'This application requires a camera to function. ';
+        
+        if (error.name === 'NotAllowedError') {
+            errorMessage += 'Please grant camera permission and reload the page.';
+        } else if (error.name === 'NotFoundError' || error.message.includes('No camera detected')) {
+            errorMessage += 'No camera detected on this device. The application cannot run.';
+        } else if (error.name === 'NotSupportedError') {
+            errorMessage += 'Your browser does not support camera access. Please use a different browser.';
+        } else {
+            errorMessage += 'An unexpected error occurred. The application cannot run.';
+        }
+
+        errorMessageElement.textContent = errorMessage;
+        disableAllCameraFunctions();
         throw error;
     }
+}
+
+function disableAllCameraFunctions() {
+    // 모든 카메라 관련 기능 비활성화
+    if (captureBtn) captureBtn.disabled = true;
+    if (switchCameraBtn) switchCameraBtn.disabled = true;
+    if (videoElement) videoElement.style.display = 'none';
+
+    // 추가적인 UI 요소들도 필요에 따라 비활성화
+}
+
+// 기존의 initializeApp 함수 내에서 initializeCamera 호출 후 에러 처리
+export async function initializeApp() {
+    // ... 기존 코드 ...
+
+    try {
+        await initializeCamera();
+    } catch (error) {
+        handleError(error, 'Camera initialization failed. The application cannot run.');
+        return; // 초기화 중단
+    }
+
+    // ... 나머지 초기화 코드 ...
 }
 
 function startCapturing() {
