@@ -1,4 +1,4 @@
-const CAPTURE_INTERVAL = 1; // Capture interval in seconds
+const CAPTURE_INTERVAL = 15;
 
 let stream;
 let videoElement;
@@ -18,6 +18,9 @@ let startTime;
 let duration;
 let durationInterval;
 let currentFacingMode = 'environment';
+let isCapturingComplete = false;
+let blobUrl; // 전역 변수로 선언하여 다른 함수에서도 접근 가능하게 합니다.
+
 
 document.addEventListener('DOMContentLoaded', initializeApp);
 
@@ -65,37 +68,25 @@ function startCapturing() {
     startTime = new Date();
     updateTimeDisplay();
     durationInterval = setInterval(updateDuration, 1000);
-    countdown = CAPTURE_INTERVAL;
-    startCountdown();
+    showRecordingMessage();
+    
+    // Capture an image immediately when starting
+    captureImage();
+    
+    // Set interval for subsequent captures
+    captureInterval = setInterval(captureImage, CAPTURE_INTERVAL * 1000);
 }
 
-function startCountdown() {
+function showRecordingMessage() {
     countdownElement.classList.remove('d-none');
-    updateCountdown();
-    countdownInterval = setInterval(updateCountdown, 1000);
-}
-
-function updateCountdown() {
-    if (!isCapturing) {
-        clearInterval(countdownInterval);
-        countdownElement.classList.add('d-none');
-        return;
-    }
-
-    if (countdown > 0) {
-        countdownElement.textContent = "Recording";
-        countdown--;
-    } else {
-        countdownElement.textContent = '찰칵';
-        clearInterval(countdownInterval);
-        captureImage();
-        countdown = CAPTURE_INTERVAL;
-        setTimeout(startCountdown, 100);
-    }
+    countdownElement.textContent = "Recording";
 }
 
 function stopCapturing() {
-    clearInterval(countdownInterval);
+    // Capture a final image before stopping
+    captureImage();
+    
+    clearInterval(captureInterval);
     clearInterval(durationInterval);
     countdownElement.classList.add('d-none');
     isCapturing = false;
@@ -114,7 +105,16 @@ function toggleCapturing() {
         captureBtn.innerHTML = '<i class="fas fa-camera"></i> Start';
         captureBtn.classList.remove('btn-danger');
         switchCameraBtn.disabled = false;
+        // Wait for the final capture to complete before creating the GIF
+        waitForFinalCapture();
+    }
+}
+
+function waitForFinalCapture() {
+    if (isCapturingComplete) {
         createAndDisplayGif();
+    } else {
+        setTimeout(waitForFinalCapture, 100); // Check again in 100ms
     }
 }
 
@@ -147,9 +147,9 @@ function drawOverlay(context, canvasWidth, canvasHeight, barHeight) {
     context.fillText(dateTimeText, canvasWidth / 2, bottomY);
 }
 
-function captureImage() {
-    if (!isCapturing) return;
 
+function captureImage() {
+    isCapturingComplete = false;
     const context = canvasElement.getContext('2d');
     const barHeight = 50;
 
@@ -163,7 +163,15 @@ function captureImage() {
     const imgElement = document.createElement('img');
     imgElement.src = imageDataUrl;
     imgElement.className = 'captured-image';
-    capturedImagesContainer.prepend(imgElement);
+    imgElement.onload = () => {
+        capturedImagesContainer.prepend(imgElement);
+        // Limit the number of displayed images (e.g., to 20)
+        const maxDisplayedImages = 200;
+        while (capturedImagesContainer.children.length > maxDisplayedImages) {
+            capturedImagesContainer.removeChild(capturedImagesContainer.lastChild);
+        }
+        isCapturingComplete = true;
+    };
 }
 
 async function switchCamera() {
@@ -221,9 +229,13 @@ async function createAndDisplayGif() {
             height: capturedImages[0].naturalHeight
         });
 
-        capturedImages.forEach(img => gif.addFrame(img, {delay: 100}));
+        // Add frames in reverse order
+        for (let i = capturedImages.length - 1; i >= 0; i--) {
+            gif.addFrame(capturedImages[i], {delay: 100});
+        }
 
         gif.on('finished', function(blob) {
+			createShareableLink(blob);
             const gifUrl = URL.createObjectURL(blob);
             displayGif(gifUrl);
             document.body.removeChild(loadingIndicator);
@@ -234,6 +246,50 @@ async function createAndDisplayGif() {
         console.error("Error in GIF generation process:", error);
         document.body.removeChild(loadingIndicator);
         alert("An error occurred while creating the GIF. Please try again.");
+    }
+}
+
+function createShareableLink(blob) {
+    if (blobUrl) {
+        URL.revokeObjectURL(blobUrl); // 기존 URL이 있다면 해제
+    }
+    blobUrl = URL.createObjectURL(blob);
+    setupShareButton(blobUrl);
+}
+
+function setupShareButton(blobUrl) {
+	const shareButton = document.getElementById('shareButton');
+	shareButton.addEventListener('click', () => shareGif(blobUrl));
+}
+
+
+function createShareableLink(blob) {
+    if (blobUrl) {
+        URL.revokeObjectURL(blobUrl); // 기존 URL이 있다면 해제
+    }
+    blobUrl = URL.createObjectURL(blob);
+    setupShareButton(blobUrl);
+}
+
+function cleanup() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+    isCapturing = false;
+    clearInterval(captureInterval);
+    clearInterval(durationInterval);
+    countdownElement.classList.add('d-none');
+    if (captureBtn) {
+        captureBtn.innerHTML = '<i class="fas fa-camera"></i> Start';
+        captureBtn.classList.remove('btn-danger');
+    }
+    if (switchCameraBtn) switchCameraBtn.disabled = false;
+    updateTimeDisplay();
+
+    // Blob URL 해제
+    if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+        blobUrl = null;
     }
 }
 
@@ -251,12 +307,23 @@ function displayGif(gifUrl) {
     gifImage.style.maxWidth = '100%';
     gifContainer.appendChild(gifImage);
 
+    const now = new Date();
+    const date = now.toLocaleDateString().replace(/\//g, '-'); // 날짜 형식을 "yyyy-mm-dd"로 변환
+    const time = now.toLocaleTimeString().replace(/:/g, '-'); // 시간 형식을 "HH-MM-SS"로 변환
+    const fileName = `BitHabit-${date}-${time}.gif`;
+
     const downloadButton = document.createElement('a');
     downloadButton.href = gifUrl;
-    downloadButton.download = 'generated_gif.gif';
-    downloadButton.textContent = 'Download GIF';
+    downloadButton.download = fileName;
+    downloadButton.textContent = '다운로드';
     downloadButton.className = 'btn btn-primary mt-2';
     gifContainer.appendChild(downloadButton);
+
+    const shareButton = document.createElement('button');
+    shareButton.textContent = '결과를 카톡에 공유';
+    shareButton.className = 'btn btn-secondary mt-2 ml-2';
+    shareButton.addEventListener('click', () => shareGif(gifUrl, fileName));
+    gifContainer.appendChild(shareButton);
 
     gifContainer.style.display = 'block';
     setTimeout(() => {
@@ -264,7 +331,26 @@ function displayGif(gifUrl) {
     }, 100);
 }
 
-// Utility functions
+async function shareGif(blobUrl, fileName) {
+    try {
+        const response = await fetch(blobUrl);
+        const blob = await response.blob();
+        const file = new File([blob], fileName, { type: "image/gif" });
+        
+        if (navigator.share) {
+            await navigator.share({
+                files: [file],
+                title: 'Check out this GIF!',
+                text: fileName
+            });
+        } else {
+            alert('직접 공유가 지원되지 않습니다. URL을 복사해 주세요: ' + blobUrl);
+        }
+    } catch (error) {
+        console.error('공유 중 오류 발생:', error);
+    }
+}
+
 function formatDuration(ms) {
     if (!ms) return '00:00:00';
     const totalSeconds = Math.floor(ms / 1000);
@@ -298,13 +384,12 @@ function checkDeviceSupport() {
     }
     return true;
 }
-
 function cleanup() {
     if (stream) {
         stream.getTracks().forEach(track => track.stop());
     }
     isCapturing = false;
-    clearInterval(countdownInterval);
+    clearInterval(captureInterval);
     clearInterval(durationInterval);
     countdownElement.classList.add('d-none');
     if (captureBtn) {
@@ -313,8 +398,13 @@ function cleanup() {
     }
     if (switchCameraBtn) switchCameraBtn.disabled = false;
     updateTimeDisplay();
-}
 
+    // Blob URL 해제
+    if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+        blobUrl = null;
+    }
+}
 window.addEventListener('beforeunload', cleanup);
 
 window.addEventListener('unhandledrejection', function(event) {
