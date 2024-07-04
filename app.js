@@ -1,4 +1,4 @@
-const CAPTURE_INTERVAL = 15;
+const CAPTURE_INTERVAL = 30;
 
 let stream;
 let videoElement;
