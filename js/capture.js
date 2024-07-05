@@ -14,7 +14,7 @@ let startTime;
 let duration;
 let durationInterval;
 
-const CAPTURE_INTERVAL = 1; // seconds
+const CAPTURE_INTERVAL = 20; // seconds
 
 export function setupCapture(video, canvas, imagesContainer, countdown, durationEl) {
     videoElement = video;
