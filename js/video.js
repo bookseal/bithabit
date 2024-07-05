@@ -108,59 +108,13 @@ function displayVideo(url, type) {
         container.appendChild(imgElement);
     }
 
-    const now = new Date();
-    const fileName = `BitHabit-${formatDateTime(now)}.gif`;
-
-    openGifInNewWindow(url, fileName);
-    container.style.display = 'block';
+	const instruction = document.createElement('p');
+	instruction.innerHTML = '<strong>1. 위에 움직이는 사진을 오래 누르고 "복사하기" 누르기</strong><br><strong>2. 카톡에 붙여넣기</strong>';
+	container.appendChild(instruction);
+	 container.style.display = 'block';
     setTimeout(() => {
         container.scrollIntoView({behavior: 'smooth', block: 'start'});
     }, 100);
-}
-
-function openGifInNewWindow(url, fileName) {
-    const newWindow = window.open('', '_blank');
-    if (newWindow) {
-        newWindow.document.write(`
-            <html>
-                <head>
-                    <title>${fileName}</title>
-                    <meta name="viewport" content="width=device-width, initial-scale=1">
-                    <style>
-                        body { 
-                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-                            text-align: center; 
-                            padding: 20px; 
-                            background-color: #f0f0f0;
-                            color: #333;
-                        }
-                        img { 
-                            max-width: 100%; 
-                            height: auto; 
-                            margin-bottom: 20px;
-                        }
-                        .instructions { 
-                            background-color: white;
-                            padding: 15px;
-                            border-radius: 10px;
-                            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                            text-align: left;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <img src="${url}" alt="생성된 GIF">
-                    <div class="instructions">
-                        <p><strong>1. 위에 움직이는 사진을 오래 누르고 "복사하기" 누르기</strong></p>
-						<p><strong>2. 카톡에 붙여넣기</strong></p>
-                    </div>
-                </body>
-            </html>
-        `);
-        newWindow.document.close();
-    } else {
-        alert('새 창을 열 수 없습니다. 브라우저 설정을 확인해 주세요.');
-    }
 }
 
 function createLoadingIndicator(message) {
