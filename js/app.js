@@ -1,4 +1,10 @@
-const CAPTURE_INTERVAL = 30;
+// app.js
+
+import { setupCamera } from './camera.js';
+import { formatDateTime, formatDuration, formatDate, formatTime, padZero } from './utils.js';
+import { setupMP4, createAndDisplayMP4 } from './mp4.js';
+
+const CAPTURE_INTERVAL = 10;
 
 let stream;
 let videoElement;
@@ -11,22 +17,14 @@ let errorMessageElement;
 let capturedImagesContainer;
 
 let isCapturing = false;
-let countdownInterval;
 let captureInterval;
-let countdown;
 let startTime;
 let duration;
 let durationInterval;
 let currentFacingMode = 'environment';
 let isCapturingComplete = false;
-let blobUrl; // 전역 변수로 선언하여 다른 함수에서도 접근 가능하게 합니다.
-
-
-document.addEventListener('DOMContentLoaded', initializeApp);
-
-function isMobileDevice() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-}
+let blobUrl;
+let cameraModule;
 
 async function initializeApp() {
     videoElement = document.getElementById('video');
@@ -41,68 +39,40 @@ async function initializeApp() {
     captureBtn.addEventListener('click', toggleCapturing);
     switchCameraBtn.addEventListener('click', switchCamera);
 
+    cameraModule = setupCamera(videoElement);
+	setupMP4(videoElement, canvasElement);
 
-	try {
-        await initializeCamera();
+    try {
+        await cameraModule.initialize();
     } catch (error) {
-        handleError(error, 'Camera initialization failed. The application cannot run.');
-        return; // 초기화 중단
+        handleError(error, error.message);
+        return;
     }
 }
 
-async function initializeCamera() {
+function waitForFinalCapture() {
+    if (isCapturingComplete) {
+		const capturedImages = Array.from(document.querySelectorAll('.captured-image'));
+        createAndDisplayMP4(capturedImages);
+        // createAndDisplayGif();
+    } else {
+        setTimeout(waitForFinalCapture, 100);
+    }
+}
+
+async function switchCamera() {
     try {
-        // 브라우저의 카메라 지원 여부 확인
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            throw new Error('Your browser does not support camera access');
-        }
-
-        // 사용 가능한 카메라 목록 가져오기
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(device => device.kind === 'videoinput');
-
-        if (videoDevices.length === 0) {
-            throw new Error('No camera detected on this device');
-        }
-
-        currentFacingMode = isMobileDevice() ? 'environment' : 'user';
-        
-        // 카메라 접근 시도
-        stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: currentFacingMode }
-        });
-
-        videoElement.srcObject = stream;
-        console.log('Camera access successful');
-
+        await cameraModule.switch();
     } catch (error) {
-        console.error('Camera access error:', error);
-        
-        let errorMessage = 'This application requires a camera to function. ';
-        
-        if (error.name === 'NotAllowedError') {
-            errorMessage += 'Please grant camera permission and reload the page.';
-        } else if (error.name === 'NotFoundError' || error.message.includes('No camera detected')) {
-            errorMessage += 'No camera detected on this device. The application cannot run.';
-        } else if (error.name === 'NotSupportedError') {
-            errorMessage += 'Your browser does not support camera access. Please use a different browser.';
-        } else {
-            errorMessage += 'An unexpected error occurred. The application cannot run.';
-        }
-
-        errorMessageElement.textContent = errorMessage;
-        disableAllCameraFunctions();
-        throw error;
+        console.error('Camera switch error:', error);
+        errorMessageElement.textContent = 'Unable to switch camera.';
     }
 }
 
 function disableAllCameraFunctions() {
-    // 모든 카메라 관련 기능 비활성화
     if (captureBtn) captureBtn.disabled = true;
     if (switchCameraBtn) switchCameraBtn.disabled = true;
     if (videoElement) videoElement.style.display = 'none';
-
-    // 추가적인 UI 요소들도 필요에 따라 비활성화
 }
 
 
@@ -111,11 +81,7 @@ function startCapturing() {
     updateTimeDisplay();
     durationInterval = setInterval(updateDuration, 1000);
     showRecordingMessage();
-    
-    // Capture an image immediately when starting
     captureImage();
-    
-    // Set interval for subsequent captures
     captureInterval = setInterval(captureImage, CAPTURE_INTERVAL * 1000);
 }
 
@@ -125,9 +91,7 @@ function showRecordingMessage() {
 }
 
 function stopCapturing() {
-    // Capture a final image before stopping
     captureImage();
-    
     clearInterval(captureInterval);
     clearInterval(durationInterval);
     countdownElement.classList.add('d-none');
@@ -147,16 +111,7 @@ function toggleCapturing() {
         captureBtn.innerHTML = '<i class="fas fa-camera"></i> Start';
         captureBtn.classList.remove('btn-danger');
         switchCameraBtn.disabled = false;
-        // Wait for the final capture to complete before creating the GIF
         waitForFinalCapture();
-    }
-}
-
-function waitForFinalCapture() {
-    if (isCapturingComplete) {
-        createAndDisplayGif();
-    } else {
-        setTimeout(waitForFinalCapture, 100); // Check again in 100ms
     }
 }
 
@@ -189,7 +144,6 @@ function drawOverlay(context, canvasWidth, canvasHeight, barHeight) {
     context.fillText(dateTimeText, canvasWidth / 2, bottomY);
 }
 
-
 function captureImage() {
     isCapturingComplete = false;
     const context = canvasElement.getContext('2d');
@@ -214,21 +168,6 @@ function captureImage() {
         }
         isCapturingComplete = true;
     };
-}
-
-async function switchCamera() {
-    currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-    
-    try {
-        const newStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: currentFacingMode }
-        });
-        videoElement.srcObject = newStream;
-        stream = newStream;
-    } catch (error) {
-        console.error('Camera switch error:', error);
-        errorMessageElement.textContent = 'Unable to switch camera.';
-    }
 }
 
 function updateTimeDisplay() {
@@ -304,37 +243,6 @@ function setupShareButton(blobUrl) {
 	shareButton.addEventListener('click', () => shareGif(blobUrl));
 }
 
-
-function createShareableLink(blob) {
-    if (blobUrl) {
-        URL.revokeObjectURL(blobUrl); // 기존 URL이 있다면 해제
-    }
-    blobUrl = URL.createObjectURL(blob);
-    setupShareButton(blobUrl);
-}
-
-function cleanup() {
-    if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-    }
-    isCapturing = false;
-    clearInterval(captureInterval);
-    clearInterval(durationInterval);
-    countdownElement.classList.add('d-none');
-    if (captureBtn) {
-        captureBtn.innerHTML = '<i class="fas fa-camera"></i> Start';
-        captureBtn.classList.remove('btn-danger');
-    }
-    if (switchCameraBtn) switchCameraBtn.disabled = false;
-    updateTimeDisplay();
-
-    // Blob URL 해제
-    if (blobUrl) {
-        URL.revokeObjectURL(blobUrl);
-        blobUrl = null;
-    }
-}
-
 function displayGif(gifUrl) {
     const gifContainer = document.getElementById('gif-container');
     if (!gifContainer) {
@@ -393,27 +301,6 @@ async function shareGif(blobUrl, fileName) {
     }
 }
 
-function formatDuration(ms) {
-    if (!ms) return '00:00:00';
-    const totalSeconds = Math.floor(ms / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    return `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}`;
-}
-
-function formatDate(date) {
-    return `${date.getFullYear()}-${padZero(date.getMonth() + 1)}-${padZero(date.getDate())}`;
-}
-
-function formatTime(date) {
-    return `${padZero(date.getHours())}-${padZero(date.getMinutes())}-${padZero(date.getSeconds())}`;
-}
-
-function padZero(num) {
-    return num.toString().padStart(2, '0');
-}
-
 function handleError(error, message) {
     console.error(message, error);
     errorMessageElement.textContent = message;
@@ -426,6 +313,7 @@ function checkDeviceSupport() {
     }
     return true;
 }
+
 function cleanup() {
     if (stream) {
         stream.getTracks().forEach(track => track.stop());
@@ -447,8 +335,9 @@ function cleanup() {
         blobUrl = null;
     }
 }
-window.addEventListener('beforeunload', cleanup);
 
+document.addEventListener('DOMContentLoaded', initializeApp);
+window.addEventListener('beforeunload', cleanup);
 window.addEventListener('unhandledrejection', function(event) {
     console.error('Unhandled promise rejection:', event.reason);
     handleError(event.reason, 'An unexpected error occurred. Please try again.');
