@@ -1,16 +1,15 @@
 // app.js
 
 import { setupCamera } from './camera.js';
-import { formatDateTime, formatDuration, formatDate, formatTime, padZero } from './utils.js';
-import { setupVideo, createAndDisplayVideo } from './video.js';
-import { setupCapture, startCapturing, stopCapturing, captureImage, isCapturingInProgress, isCaptureComplete } from './capture.js';
+import { createAndDisplayVideo } from './video.js';
+import { setupCapture, startCapturing, stopCapturing, isCapturingInProgress, isCaptureComplete } from './capture.js';
 
 let stream;
 let videoElement;
 let canvasElement;
 let captureBtn;
 let switchCameraBtn;
-let countdownElement;
+let recordingStatusElement;
 let durationElement;
 let errorMessageElement;
 let capturedImagesContainer;
@@ -26,7 +25,7 @@ async function initializeApp() {
     canvasElement = document.getElementById('canvas');
     captureBtn = document.getElementById('captureBtn');
     switchCameraBtn = document.getElementById('switchCameraBtn');
-    countdownElement = document.getElementById('countdown');
+    recordingStatusElement = document.getElementById('recordingStatus');
     durationElement = document.getElementById('duration');
     errorMessageElement = document.getElementById('errorMessage');
     capturedImagesContainer = document.getElementById('capturedImages');
@@ -35,9 +34,8 @@ async function initializeApp() {
     switchCameraBtn.addEventListener('click', switchCamera);
 
     cameraModule = setupCamera(videoElement);
-	setupVideo(videoElement, canvasElement);
-	setupCapture(videoElement, canvasElement, capturedImagesContainer, countdownElement, durationElement);
-    try {
+	setupCapture(videoElement, canvasElement, capturedImagesContainer, recordingStatusElement, durationElement);
+    try {    
         await cameraModule.initialize();
     } catch (error) {
         handleError(error, error.message);

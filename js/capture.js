@@ -5,7 +5,7 @@ import { formatDate, formatTime, formatDuration, padZero } from './utils.js';
 let videoElement;
 let canvasElement;
 let capturedImagesContainer;
-let countdownElement;
+let recordingStatusElement;
 let durationElement;
 let captureInterval;
 let isCapturing = false;
@@ -16,11 +16,11 @@ let durationInterval;
 
 const CAPTURE_INTERVAL = 20; // seconds
 
-export function setupCapture(video, canvas, imagesContainer, countdown, durationEl) {
+export function setupCapture(video, canvas, imagesContainer, recordingStatus, durationEl) {
     videoElement = video;
     canvasElement = canvas;
     capturedImagesContainer = imagesContainer;
-    countdownElement = countdown;
+    recordingStatusElement = recordingStatus;
     durationElement = durationEl;
 }
 
@@ -39,7 +39,7 @@ export function stopCapturing() {
     captureImage();
     clearInterval(captureInterval);
     clearInterval(durationInterval);
-    countdownElement.classList.add('d-none');
+    recordingStatusElement.classList.add('d-none');
 }
 
 export function captureImage() {
@@ -98,8 +98,8 @@ function drawOverlay(context, canvasWidth, canvasHeight, barHeight) {
 }
 
 function showRecordingMessage() {
-    countdownElement.classList.remove('d-none');
-    countdownElement.textContent = "Recording";
+    recordingStatusElement.classList.remove('d-none');
+    recordingStatusElement.textContent = "Recording";
 }
 
 function updateTimeDisplay() {
