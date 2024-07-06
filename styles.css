@@ -2,10 +2,6 @@ body {
     background-color: #f8f9fa;
 }
 
-.advanced-mode {
-    display: none;
-}
-
 .container {
     max-width: 800px;
 }
@@ -19,12 +15,14 @@ body {
     overflow: hidden;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+
 #video {
     width: 100%;
     height: auto;
 }
+
 #recordingStatus {
-    font-size: 50px;
+    font-size: 48px;
     font-weight: bold;
     color: white;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
@@ -33,6 +31,7 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
 }
+
 .overlay {
     position: absolute;
     padding: 10px;
@@ -128,7 +127,6 @@ body {
     transform: scale(1.1);
 }
 
-/* 스크롤바 스타일링 (선택적) */
 #capturedImages::-webkit-scrollbar {
     width: 6px;
 }
@@ -147,9 +145,6 @@ body {
 }
 
 #switchCameraBtn {
-    /* Remove absolute positioning */
-    position: static;
-    /* Make the button circular */
     padding: 12px;
     border-radius: 50%;
 }
