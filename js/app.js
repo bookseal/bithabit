@@ -35,12 +35,7 @@ async function initializeApp() {
 
     cameraModule = setupCamera(videoElement);
 	setupCapture(videoElement, canvasElement, capturedImagesContainer, recordingStatusElement, durationElement);
-    try {    
-        await cameraModule.initialize();
-    } catch (error) {
-        handleError(error, error.message);
-        return;
-    }
+	await cameraModule.initialize();
 }
 
 function waitForFinalCapture() {
@@ -67,35 +62,6 @@ function toggleCapturing() {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function createShareableLink(blob) {
-    if (blobUrl) {
-        URL.revokeObjectURL(blobUrl);
-    }
-    blobUrl = URL.createObjectURL(blob);
-    setupShareButton(blobUrl);
-}
-
-function setupShareButton(blobUrl) {
-	const shareButton = document.getElementById('shareButton');
-	shareButton.addEventListener('click', () => shareGif(blobUrl));
-}
-
 async function switchCamera() {
     try {
         await cameraModule.switch();
@@ -103,25 +69,6 @@ async function switchCamera() {
         console.error('Camera switch error:', error);
         errorMessageElement.textContent = 'Unable to switch camera.';
     }
-}
-
-function disableAllCameraFunctions() {
-    if (captureBtn) captureBtn.disabled = true;
-    if (switchCameraBtn) switchCameraBtn.disabled = true;
-    if (videoElement) videoElement.style.display = 'none';
-}
-
-function handleError(error, message) {
-    console.error(message, error);
-    errorMessageElement.textContent = message;
-}
-
-function checkDeviceSupport() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        handleError(null, 'Your device does not support the required media features.');
-        return false;
-    }
-    return true;
 }
 
 function cleanup() {
@@ -154,13 +101,30 @@ window.addEventListener('unhandledrejection', function(event) {
     handleError(event.reason, 'An unexpected error occurred. Please try again.');
 });
 
-document.addEventListener('DOMContentLoaded', function() {
-    if (checkDeviceSupport()) {
-        initializeApp().catch(error => {
-            handleError(error, 'Failed to initialize the application. Please refresh the page and try again.');
-        });
-    }
-});
+function handleError(error, message) {
+    console.error(message, error);
+    errorMessageElement.textContent = message;
+}
+
+
+// function createShareableLink(blob) {
+//     if (blobUrl) {
+//         URL.revokeObjectURL(blobUrl);
+//     }
+//     blobUrl = URL.createObjectURL(blob);
+//     setupShareButton(blobUrl);
+// }
+
+// function setupShareButton(blobUrl) {
+// 	const shareButton = document.getElementById('shareButton');
+// 	shareButton.addEventListener('click', () => shareGif(blobUrl));
+// }
+
+// function disableAllCameraFunctions() {
+//     if (captureBtn) captureBtn.disabled = true;
+//     if (switchCameraBtn) switchCameraBtn.disabled = true;
+//     if (videoElement) videoElement.style.display = 'none';
+// }
 
 // async function createAndDisplayGif() {
 //     const capturedImages = Array.from(document.querySelectorAll('.captured-image'));
