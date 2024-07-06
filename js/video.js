@@ -115,6 +115,30 @@ function displayVideo(url, type) {
     setTimeout(() => {
         container.scrollIntoView({behavior: 'smooth', block: 'start'});
     }, 100);
+
+	const now = new Date();
+	const fileName = `BitHabit-${formatDateTime(now)}.gif`;
+	const downloadButton = createButton(null, null, 'Download', 'btn-primary');
+	downloadButton.addEventListener('click', () => downloadGif(url, fileName));
+	container.appendChild(downloadButton);
+}
+
+function createButton(id, className, text, btnClassName) {
+	const button = document.createElement('button');
+	button.id = id;
+	button.className = className;
+	button.textContent = text;
+	button.className = btnClassName;
+	return button;
+}
+
+function downloadGif(url, fileName) {
+	const a = document.createElement('a');
+	a.href = url;
+	a.download = fileName;
+	document.body.appendChild(a);
+	a.click();
+	document.body.removeChild(a);
 }
 
 function createLoadingIndicator(message) {
