@@ -62,7 +62,7 @@ function waitForFinalCapture() {
 }
 
 async function toggleCapturing() {
-	let id = document.getElementById('userID').value;
+	let id = document.getElementById('userID').value.toLowerCase();
 	if (isFinish)
 		;
     else if (isCapturingInProgress()) {
