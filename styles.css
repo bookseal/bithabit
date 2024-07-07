@@ -8,7 +8,7 @@ body {
 
 .video-container {
     position: relative;
-    width: 80%;
+    width: 100%;
     max-width: 480px;
     margin: 0 auto;
     border-radius: 15px;
