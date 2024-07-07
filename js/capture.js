@@ -5,7 +5,7 @@ import { formatDate, formatTime, formatDuration, padZero } from './utils.js';
 let videoElement;
 let canvasElement;
 let capturedImagesContainer;
-let countdownElement;
+let recordingStatusElement;
 let durationElement;
 let captureInterval;
 let isCapturing = false;
@@ -16,17 +16,17 @@ let durationInterval;
 
 const CAPTURE_INTERVAL = 20; // seconds
 
-export function setupCapture(video, canvas, imagesContainer, countdown, durationEl) {
+export function setupCapture(video, canvas, imagesContainer, recordingStatus, durationEl) {
     videoElement = video;
     canvasElement = canvas;
     capturedImagesContainer = imagesContainer;
-    countdownElement = countdown;
+    recordingStatusElement = recordingStatus;
     durationElement = durationEl;
 }
 
-export function startCapturing() {
+export function startCapturing(_startTime) {
     isCapturing = true;
-    startTime = new Date();
+	startTime = _startTime;
     updateTimeDisplay();
     durationInterval = setInterval(updateDuration, 1000);
     showRecordingMessage();
@@ -39,7 +39,8 @@ export function stopCapturing() {
     captureImage();
     clearInterval(captureInterval);
     clearInterval(durationInterval);
-    countdownElement.classList.add('d-none');
+    recordingStatusElement.classList.add('d-none');
+	return duration;
 }
 
 export function captureImage() {
@@ -79,7 +80,7 @@ function drawOverlay(context, canvasWidth, canvasHeight, barHeight) {
 
     context.font = '30px Arial';
     context.fillStyle = 'black';
-    context.textAlign = 'center';
+    context.textAlign = 'right';
     context.fillText('BitHabit', canvasWidth / 2, centerY + barHeight / 2 + 10);
 
     const durationText = durationElement.textContent;
@@ -98,8 +99,8 @@ function drawOverlay(context, canvasWidth, canvasHeight, barHeight) {
 }
 
 function showRecordingMessage() {
-    countdownElement.classList.remove('d-none');
-    countdownElement.textContent = "Recording";
+    recordingStatusElement.classList.remove('d-none');
+    recordingStatusElement.textContent = "Recording";
 }
 
 function updateTimeDisplay() {
@@ -108,7 +109,7 @@ function updateTimeDisplay() {
 
 function updateDuration() {
     const now = new Date();
-    duration = now - startTime;
+	duration = now - startTime;
     if (durationElement) durationElement.textContent = formatDuration(duration);
 }
 

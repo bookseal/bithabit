@@ -1,48 +1,55 @@
 // app.js
 
 import { setupCamera } from './camera.js';
-import { formatDateTime, formatDuration, formatDate, formatTime, padZero } from './utils.js';
-import { setupVideo, createAndDisplayVideo } from './video.js';
-import { setupCapture, startCapturing, stopCapturing, captureImage, isCapturingInProgress, isCaptureComplete } from './capture.js';
+import { createAndDisplayVideo } from './video.js';
+import { setupCapture, startCapturing, stopCapturing, isCapturingInProgress, isCaptureComplete } from './capture.js';
+import { submitAttendance } from './attendance.js';
 
 let stream;
 let videoElement;
 let canvasElement;
 let captureBtn;
 let switchCameraBtn;
-let countdownElement;
+let recordingStatusElement;
 let durationElement;
 let errorMessageElement;
 let capturedImagesContainer;
 
 let isCapturing = false;
+let isFinish = false;
 let captureInterval;
 let durationInterval;
 let blobUrl;
 let cameraModule;
+let startTime;
+let duration;
 
 async function initializeApp() {
     videoElement = document.getElementById('video');
     canvasElement = document.getElementById('canvas');
     captureBtn = document.getElementById('captureBtn');
     switchCameraBtn = document.getElementById('switchCameraBtn');
-    countdownElement = document.getElementById('countdown');
+    recordingStatusElement = document.getElementById('recordingStatus');
     durationElement = document.getElementById('duration');
     errorMessageElement = document.getElementById('errorMessage');
     capturedImagesContainer = document.getElementById('capturedImages');
 
+	const userIDInput = document.getElementById('userID');
+	const savedUserID = localStorage.getItem('userID');
+	if (savedUserID) {
+		userIDInput.value = savedUserID;
+	}
+
+	userIDInput.addEventListener('input', function () {
+		localStorage.setItem('userID', userIDInput.value);
+	});
+	
     captureBtn.addEventListener('click', toggleCapturing);
     switchCameraBtn.addEventListener('click', switchCamera);
 
     cameraModule = setupCamera(videoElement);
-	setupVideo(videoElement, canvasElement);
-	setupCapture(videoElement, canvasElement, capturedImagesContainer, countdownElement, durationElement);
-    try {
-        await cameraModule.initialize();
-    } catch (error) {
-        handleError(error, error.message);
-        return;
-    }
+	setupCapture(videoElement, canvasElement, capturedImagesContainer, recordingStatusElement, durationElement);
+	await cameraModule.initialize();
 }
 
 function waitForFinalCapture() {
@@ -54,48 +61,28 @@ function waitForFinalCapture() {
     }
 }
 
-function toggleCapturing() {
-    if (isCapturingInProgress()) {
-        stopCapturing();
-        captureBtn.innerHTML = '<i class="fas fa-camera"></i> Start';
+async function toggleCapturing() {
+	let id = document.getElementById('userID').value.toLowerCase();
+	if (isFinish)
+		;
+    else if (isCapturingInProgress()) {
+		duration = stopCapturing();
+        captureBtn.innerHTML = '<i class="fas fa-??"></i> Finish';
         captureBtn.classList.remove('btn-danger');
         switchCameraBtn.disabled = false;
+		await submitAttendance(id, startTime, duration);
         waitForFinalCapture();
-    } else {
-        startCapturing();
-        captureBtn.innerHTML = '<i class="fas fa-stop"></i> Stop';
-        captureBtn.classList.add('btn-danger');
-        switchCameraBtn.disabled = true;
+    } else if (!id) {
+		alert("Please enter your ID before starting.");
+	} else {
+		startTime = new Date();
+		startCapturing(startTime);
+		captureBtn.innerHTML = '<i class="fas fa-stop"></i> Stop';
+		captureBtn.classList.remove('btn-checking');
+		captureBtn.classList.add('btn-danger');
+		captureBtn.classList.remove('btn-danger');
+		switchCameraBtn.disabled = true;
     }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function createShareableLink(blob) {
-    if (blobUrl) {
-        URL.revokeObjectURL(blobUrl);
-    }
-    blobUrl = URL.createObjectURL(blob);
-    setupShareButton(blobUrl);
-}
-
-function setupShareButton(blobUrl) {
-	const shareButton = document.getElementById('shareButton');
-	shareButton.addEventListener('click', () => shareGif(blobUrl));
 }
 
 async function switchCamera() {
@@ -105,25 +92,6 @@ async function switchCamera() {
         console.error('Camera switch error:', error);
         errorMessageElement.textContent = 'Unable to switch camera.';
     }
-}
-
-function disableAllCameraFunctions() {
-    if (captureBtn) captureBtn.disabled = true;
-    if (switchCameraBtn) switchCameraBtn.disabled = true;
-    if (videoElement) videoElement.style.display = 'none';
-}
-
-function handleError(error, message) {
-    console.error(message, error);
-    errorMessageElement.textContent = message;
-}
-
-function checkDeviceSupport() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        handleError(null, 'Your device does not support the required media features.');
-        return false;
-    }
-    return true;
 }
 
 function cleanup() {
@@ -148,6 +116,12 @@ function cleanup() {
         blobUrl = null;
     }
 }
+document.getElementById('userID').addEventListener('keypress', function(event) {
+	if (event.key === 'Enter') {
+		event.preventDefault(); // Prevent the default form submission
+		document.getElementById('captureBtn').click(); // Programmatically click the capture button
+	}
+});
 
 document.addEventListener('DOMContentLoaded', initializeApp);
 window.addEventListener('beforeunload', cleanup);
@@ -156,13 +130,30 @@ window.addEventListener('unhandledrejection', function(event) {
     handleError(event.reason, 'An unexpected error occurred. Please try again.');
 });
 
-document.addEventListener('DOMContentLoaded', function() {
-    if (checkDeviceSupport()) {
-        initializeApp().catch(error => {
-            handleError(error, 'Failed to initialize the application. Please refresh the page and try again.');
-        });
-    }
-});
+function handleError(error, message) {
+    console.error(message, error);
+    errorMessageElement.textContent = message;
+}
+
+
+// function createShareableLink(blob) {
+//     if (blobUrl) {
+//         URL.revokeObjectURL(blobUrl);
+//     }
+//     blobUrl = URL.createObjectURL(blob);
+//     setupShareButton(blobUrl);
+// }
+
+// function setupShareButton(blobUrl) {
+// 	const shareButton = document.getElementById('shareButton');
+// 	shareButton.addEventListener('click', () => shareGif(blobUrl));
+// }
+
+// function disableAllCameraFunctions() {
+//     if (captureBtn) captureBtn.disabled = true;
+//     if (switchCameraBtn) switchCameraBtn.disabled = true;
+//     if (videoElement) videoElement.style.display = 'none';
+// }
 
 // async function createAndDisplayGif() {
 //     const capturedImages = Array.from(document.querySelectorAll('.captured-image'));

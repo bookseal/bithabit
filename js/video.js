@@ -2,20 +2,12 @@
 
 import { formatDateTime } from './utils.js';
 
-let videoElement;
-let canvasElement;
-
-export function setupVideo(video, canvas) {
-    videoElement = video;
-    canvasElement = canvas;
-}
-
 export async function createAndDisplayVideo(capturedImages) {
     if (capturedImages.length === 0) {
         console.log("No captured images!");
         return;
     }
-    console.log(`Starting video creation with ${capturedImages.length} images`);
+
     const loadingIndicator = createLoadingIndicator('Creating animated GIF...');
     document.body.appendChild(loadingIndicator);
     try {

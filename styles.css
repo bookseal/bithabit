@@ -2,10 +2,6 @@ body {
     background-color: #f8f9fa;
 }
 
-.advanced-mode {
-    display: none;
-}
-
 .container {
     max-width: 800px;
 }
@@ -13,18 +9,20 @@ body {
 .video-container {
     position: relative;
     width: 100%;
-    max-width: 640px;
+    max-width: 480px;
     margin: 0 auto;
     border-radius: 15px;
     overflow: hidden;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+
 #video {
     width: 100%;
     height: auto;
 }
-#countdown {
-    font-size: 72px;
+
+#recordingStatus {
+    font-size: 48px;
     font-weight: bold;
     color: white;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
@@ -33,6 +31,7 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
 }
+
 .overlay {
     position: absolute;
     padding: 10px;
@@ -62,6 +61,19 @@ body {
     gap: 10px;
 }
 
+.title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #333;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    font-weight: bold;
+    margin-bottom: 0;
+}
+
 .btn-custom {
     background-color: rgba(255, 255, 255, 0.8);
     border: none;
@@ -86,12 +98,46 @@ body {
     margin-right: 5px;
 }
 
+.btn-submit {
+    background-color: #007BFF;
+    color: white;
+}
+
+.btn-submit i {
+    margin-right: 5px;
+    animation: spin 1s linear infinite;
+}
+
+.btn-checking {
+    background-color: #FFA500; /* Orange color to indicate waiting */
+    color: white;
+}
+
 .title {
     font-size: 2rem;
     font-weight: 700;
     color: #333;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
     margin-bottom: 1.5rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#userID {
+    border-radius: 15px;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ced4da;
+    transition: border-color 0.3s;
+}
+
+#userID:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
 #errorMessage {
@@ -128,7 +174,6 @@ body {
     transform: scale(1.1);
 }
 
-/* 스크롤바 스타일링 (선택적) */
 #capturedImages::-webkit-scrollbar {
     width: 6px;
 }
@@ -147,9 +192,6 @@ body {
 }
 
 #switchCameraBtn {
-    /* Remove absolute positioning */
-    position: static;
-    /* Make the button circular */
     padding: 12px;
     border-radius: 50%;
 }

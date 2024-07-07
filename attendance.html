@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" />
+</head>
+<body>
+    <section class="hero is-primary is-bold">
+        <div class="hero-body">
+            <div class="container">
+                <h1 class="title">Attendance Form</h1>
+            </div>
+        </div>
+    </section>
+    <form id="form" class="container m-4 pl-4" method="POST">
+        <div class="field">
+            <label class="label">ID</label>
+            <div class="control">
+                <input class="input" type="text" placeholder="Your ID" name="ID" />
+            </div>
+        </div>
+
+        <div class="field is-grouped">
+            <div class="control">
+                <button class="button is-primary" type="submit" id="submit-button">
+                    Submit
+                </button>
+            </div>
+            <div class="control">
+                <button class="button is-danger" type="reset">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </form>
+    <div id="message" style="
+        display: none;
+        margin: 20px;
+        font-weight: bold;
+        color: green;
+        padding: 8px;
+        background-color: beige;
+        border-radius: 4px;
+        border-color: aquamarine;
+      "></div>
+
+    <script>
+        document.getElementById("form").addEventListener("submit", function (e) {
+            e.preventDefault(); // Prevent the default form submission
+            document.getElementById("message").textContent = "Submitting..";
+            document.getElementById("message").style.display = "block";
+            document.getElementById("submit-button").disabled = true;
+
+            // Collect the form data
+            var formData = new FormData(this);
+            var keyValuePairs = [];
+            for (var pair of formData.entries()) {
+                keyValuePairs.push(pair[0] + "=" + pair[1]);
+            }
+
+            var formDataString = keyValuePairs.join("&");
+
+            console.log("Form Data String: ", formDataString); // Log form data string
+
+            // Send a POST request to your Google Apps Script
+            fetch(
+                "https://script.google.com/macros/s/AKfycbz8xJpNZmECdex3fcykRQEyQ_UpHzYDe3vKl_nNGC1ELgA0JWzwLRbdaaCKuccZ4h8Lxg/exec",
+                {
+                    redirect: "follow",
+                    method: "POST",
+                    body: formDataString,
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded;charset=utf-8",
+                    },
+                }
+            )
+                .then(function (response) {
+                    console.log("Response: ", response); // Log the response
+                    // Check if the request was successful
+                    if (response.ok) {
+                        return response.json(); // Assuming your script returns JSON response
+                    } else {
+                        throw new Error("Failed to submit the form.");
+                    }
+                })
+                .then(function (data) {
+                    console.log("Data: ", data); // Log the data received
+                    // Display a success message
+                    document.getElementById("message").textContent =
+                        "Data submitted successfully!";
+                    document.getElementById("message").style.display = "block";
+                    document.getElementById("message").style.backgroundColor = "green";
+                    document.getElementById("message").style.color = "beige";
+                    document.getElementById("submit-button").disabled = false;
+                    document.getElementById("form").reset();
+
+                    setTimeout(function () {
+                        document.getElementById("message").textContent = "";
+                        document.getElementById("message").style.display = "none";
+                    }, 2600);
+                })
+                .catch(function (error) {
+                    console.error("Error: ", error); // Log the error
+                    // Handle errors, you can display an error message here
+                    document.getElementById("message").textContent =
+                        "An error occurred while submitting the form.";
+                    document.getElementById("message").style.display = "block";
+                });
+        });
+    </script>
+</body>
+</html>
