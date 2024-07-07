@@ -116,6 +116,12 @@ function cleanup() {
         blobUrl = null;
     }
 }
+document.getElementById('userID').addEventListener('keypress', function(event) {
+	if (event.key === 'Enter') {
+		event.preventDefault(); // Prevent the default form submission
+		document.getElementById('captureBtn').click(); // Programmatically click the capture button
+	}
+});
 
 document.addEventListener('DOMContentLoaded', initializeApp);
 window.addEventListener('beforeunload', cleanup);
