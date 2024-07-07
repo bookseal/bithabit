@@ -109,7 +109,7 @@ function displayVideo(url, type) {
     }
 
 	const instruction = document.createElement('p');
-	instruction.innerHTML = '<strong>1. 위에 움직이는 사진을 오래 누르고 "복사하기" 누르기</strong><br><strong>2. 카톡에 붙여넣기</strong>';
+	instruction.innerHTML = '<strong>1. 위에 움직이는 사진을 오래 누르고 "복사하기" 누르기</strong><br><strong>2. 공유버튼을 누르지 마시고 카톡앱을 실행하여 해당 오픈채팅방에 붙여넣기</strong>';
 	container.appendChild(instruction);
 	 container.style.display = 'block';
     setTimeout(() => {
