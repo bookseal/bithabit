@@ -3,6 +3,7 @@
 import { setupCamera } from './camera.js';
 import { createAndDisplayVideo } from './video.js';
 import { setupCapture, startCapturing, stopCapturing, isCapturingInProgress, isCaptureComplete } from './capture.js';
+import { submitAttendance } from './attendance.js';
 
 let stream;
 let videoElement;
@@ -47,7 +48,7 @@ function waitForFinalCapture() {
     }
 }
 
-function toggleCapturing() {
+async function toggleCapturing() {
     if (isCapturingInProgress()) {
         stopCapturing();
         captureBtn.innerHTML = '<i class="fas fa-camera"></i> Start';
@@ -55,10 +56,24 @@ function toggleCapturing() {
         switchCameraBtn.disabled = false;
         waitForFinalCapture();
     } else {
-        startCapturing();
-        captureBtn.innerHTML = '<i class="fas fa-stop"></i> Stop';
-        captureBtn.classList.add('btn-danger');
-        switchCameraBtn.disabled = true;
+		try {
+			await submitAttendance();
+			startCapturing();
+			setTimeout( function () {
+				captureBtn.innerHTML = '<i class="fas fa-stop"></i> Stop';
+				captureBtn.classList.remove('btn-checking');
+				captureBtn.classList.add('btn-danger');
+				captureBtn.classList.remove('btn-danger');
+				switchCameraBtn.disabled = true;
+			}, 1500)
+		} catch (error) {
+			captureBtn.classList.remove('btn-checking');
+			captureBtn.innerHTML = '<i class="fas fa-camera"></i> Start';
+			captureBtn.classList.remove('btn-danger');
+			switchCameraBtn.disabled = false;
+			console.error('Attendance submission error:', error);
+			errorMessageElement.textContent = 'Unable to submit attendance.';
+		}
     }
 }
 
