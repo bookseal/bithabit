@@ -3,6 +3,7 @@
 import { setupCamera } from './camera.js';
 import { createAndDisplayVideo } from './video.js';
 import { setupCapture, startCapturing, stopCapturing, isCapturingInProgress, isCaptureComplete } from './capture.js';
+import { submitAttendance } from './attendance.js';
 
 let stream;
 let videoElement;
@@ -15,10 +16,13 @@ let errorMessageElement;
 let capturedImagesContainer;
 
 let isCapturing = false;
+let isFinish = false;
 let captureInterval;
 let durationInterval;
 let blobUrl;
 let cameraModule;
+let startTime;
+let duration;
 
 async function initializeApp() {
     videoElement = document.getElementById('video');
@@ -30,6 +34,16 @@ async function initializeApp() {
     errorMessageElement = document.getElementById('errorMessage');
     capturedImagesContainer = document.getElementById('capturedImages');
 
+	const userIDInput = document.getElementById('userID');
+	const savedUserID = localStorage.getItem('userID');
+	if (savedUserID) {
+		userIDInput.value = savedUserID;
+	}
+
+	userIDInput.addEventListener('input', function () {
+		localStorage.setItem('userID', userIDInput.value);
+	});
+	
     captureBtn.addEventListener('click', toggleCapturing);
     switchCameraBtn.addEventListener('click', switchCamera);
 
@@ -47,18 +61,27 @@ function waitForFinalCapture() {
     }
 }
 
-function toggleCapturing() {
-    if (isCapturingInProgress()) {
-        stopCapturing();
-        captureBtn.innerHTML = '<i class="fas fa-camera"></i> Start';
+async function toggleCapturing() {
+	let id = document.getElementById('userID').value;
+	if (isFinish)
+		;
+    else if (isCapturingInProgress()) {
+		duration = stopCapturing();
+        captureBtn.innerHTML = '<i class="fas fa-??"></i> Finish';
         captureBtn.classList.remove('btn-danger');
         switchCameraBtn.disabled = false;
+		await submitAttendance(id, startTime, duration);
         waitForFinalCapture();
-    } else {
-        startCapturing();
-        captureBtn.innerHTML = '<i class="fas fa-stop"></i> Stop';
-        captureBtn.classList.add('btn-danger');
-        switchCameraBtn.disabled = true;
+    } else if (!id) {
+		alert("Please enter your ID before starting.");
+	} else {
+		startTime = new Date();
+		startCapturing(startTime);
+		captureBtn.innerHTML = '<i class="fas fa-stop"></i> Stop';
+		captureBtn.classList.remove('btn-checking');
+		captureBtn.classList.add('btn-danger');
+		captureBtn.classList.remove('btn-danger');
+		switchCameraBtn.disabled = true;
     }
 }
 

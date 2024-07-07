@@ -24,9 +24,9 @@ export function setupCapture(video, canvas, imagesContainer, recordingStatus, du
     durationElement = durationEl;
 }
 
-export function startCapturing() {
+export function startCapturing(_startTime) {
     isCapturing = true;
-    startTime = new Date();
+	startTime = _startTime;
     updateTimeDisplay();
     durationInterval = setInterval(updateDuration, 1000);
     showRecordingMessage();
@@ -40,6 +40,7 @@ export function stopCapturing() {
     clearInterval(captureInterval);
     clearInterval(durationInterval);
     recordingStatusElement.classList.add('d-none');
+	return duration;
 }
 
 export function captureImage() {
@@ -79,7 +80,7 @@ function drawOverlay(context, canvasWidth, canvasHeight, barHeight) {
 
     context.font = '30px Arial';
     context.fillStyle = 'black';
-    context.textAlign = 'center';
+    context.textAlign = 'right';
     context.fillText('BitHabit', canvasWidth / 2, centerY + barHeight / 2 + 10);
 
     const durationText = durationElement.textContent;
@@ -108,7 +109,7 @@ function updateTimeDisplay() {
 
 function updateDuration() {
     const now = new Date();
-    duration = now - startTime;
+	duration = now - startTime;
     if (durationElement) durationElement.textContent = formatDuration(duration);
 }
 
