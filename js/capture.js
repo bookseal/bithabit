@@ -24,9 +24,9 @@ export function setupCapture(video, canvas, imagesContainer, recordingStatus, du
     durationElement = durationEl;
 }
 
-export function startCapturing() {
+export function startCapturing(_startTime) {
     isCapturing = true;
-	startTime = new Date();
+	startTime = _startTime;
     updateTimeDisplay();
     durationInterval = setInterval(updateDuration, 1000);
     showRecordingMessage();
@@ -40,6 +40,7 @@ export function stopCapturing() {
     clearInterval(captureInterval);
     clearInterval(durationInterval);
     recordingStatusElement.classList.add('d-none');
+	return duration;
 }
 
 export function captureImage() {

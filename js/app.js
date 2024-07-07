@@ -16,10 +16,13 @@ let errorMessageElement;
 let capturedImagesContainer;
 
 let isCapturing = false;
+let isFinish = false;
 let captureInterval;
 let durationInterval;
 let blobUrl;
 let cameraModule;
+let startTime;
+let duration;
 
 async function initializeApp() {
     videoElement = document.getElementById('video');
@@ -49,31 +52,26 @@ function waitForFinalCapture() {
 }
 
 async function toggleCapturing() {
-    if (isCapturingInProgress()) {
-        stopCapturing();
-        captureBtn.innerHTML = '<i class="fas fa-camera"></i> Start';
+	let id = document.getElementById('userID').value;
+	if (isFinish)
+		;
+    else if (isCapturingInProgress()) {
+		duration = stopCapturing();
+        captureBtn.innerHTML = '<i class="fas fa-??"></i> Finish';
         captureBtn.classList.remove('btn-danger');
         switchCameraBtn.disabled = false;
+		await submitAttendance(id, startTime, duration);
         waitForFinalCapture();
-    } else {
-		try {
-			await submitAttendance();
-			startCapturing();
-			setTimeout( function () {
-				captureBtn.innerHTML = '<i class="fas fa-stop"></i> Stop';
-				captureBtn.classList.remove('btn-checking');
-				captureBtn.classList.add('btn-danger');
-				captureBtn.classList.remove('btn-danger');
-				switchCameraBtn.disabled = true;
-			}, 1500)
-		} catch (error) {
-			captureBtn.classList.remove('btn-checking');
-			captureBtn.innerHTML = '<i class="fas fa-camera"></i> Start';
-			captureBtn.classList.remove('btn-danger');
-			switchCameraBtn.disabled = false;
-			console.error('Attendance submission error:', error);
-			errorMessageElement.textContent = 'Unable to submit attendance.';
-		}
+    } else if (!id) {
+		alert("Please enter your ID before starting.");
+	} else {
+		startTime = new Date();
+		startCapturing(startTime);
+		captureBtn.innerHTML = '<i class="fas fa-stop"></i> Stop';
+		captureBtn.classList.remove('btn-checking');
+		captureBtn.classList.add('btn-danger');
+		captureBtn.classList.remove('btn-danger');
+		switchCameraBtn.disabled = true;
     }
 }
 

@@ -1,8 +1,6 @@
 // attendance.js
 
-export async function submitAttendance() {
-    const IDInput = document.getElementById('userID');
-    const id = IDInput.value;
+export async function submitAttendance(id, startTime, duration) {
 	const errorMessageElement = document.getElementById("errorMessage");
 	const captureBtn = document.getElementById("captureBtn");
 
@@ -18,9 +16,10 @@ export async function submitAttendance() {
     }
 
     const formData = new URLSearchParams();
-    formData.append('id', id);
 	const current_time = new Date();
-    formData.append('Timestamp', current_time.toISOString());
+    formData.append('id', id);
+	formData.append('in', startTime.toISOString());
+	formData.append('duration', duration / 1000 / 60);
 
     try {
         const response = await fetch(
@@ -39,8 +38,7 @@ export async function submitAttendance() {
         if (response.ok) {
             const data = await response.json();
             console.log("Data: ", data); // Log the data received
-			captureBtn.innerHTML = '<i class="fas fa-video"></i> 녹화시작';
-
+			captureBtn.innerHTML = '<i class="fas fa-check"></i> 출섹체크완료';
         } else {
 			captureBtn.innerHTML = '<i class="fas fa-camera"></i> Start';
 			captureBtn.classList.remove('btn-checking');
