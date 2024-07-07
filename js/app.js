@@ -34,6 +34,16 @@ async function initializeApp() {
     errorMessageElement = document.getElementById('errorMessage');
     capturedImagesContainer = document.getElementById('capturedImages');
 
+	const userIDInput = document.getElementById('userID');
+	const savedUserID = localStorage.getItem('userID');
+	if (savedUserID) {
+		userIDInput.value = savedUserID;
+	}
+
+	userIDInput.addEventListener('input', function () {
+		localStorage.setItem('userID', userIDInput.value);
+	});
+	
     captureBtn.addEventListener('click', toggleCapturing);
     switchCameraBtn.addEventListener('click', switchCamera);
 
