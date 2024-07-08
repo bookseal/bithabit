@@ -16,7 +16,7 @@ let durationInterval;
 let blinkInterval;
 
 const CAPTURE_INTERVAL = 20; // seconds
-const TWENTY_MINUTES = 20 * 60 * 1000; // 20 minutes in milliseconds
+const TWENTY_MINUTES = 0.5 * 60 * 1000; // 20 minutes in milliseconds
 
 export function setupCapture(video, canvas, imagesContainer, recordingStatus, durationEl) {
     videoElement = video;
@@ -93,7 +93,7 @@ function drawOverlay(context, canvasWidth, canvasHeight, barHeight) {
     context.textAlign = 'center';
     context.fillText(userId, canvasWidth / 2, centerY + barHeight / 2 + 10);
 
-    // Draw duration text on the left
+    // Draw duration text on the left 
     const durationText = durationElement.textContent;
     context.textAlign = 'left';
     context.fillText(durationText, 10, centerY + barHeight / 2 + 10);
@@ -126,7 +126,24 @@ function updateDuration() {
     if (durationElement) durationElement.textContent = formatDuration(duration);
 	if (duration >= TWENTY_MINUTES && !blinkInterval) {
 		startBlinking();
+		playBeepSound();
 	}
+}
+
+function playBeepSound() {
+	const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.type = 'sine'; // 비프음의 타입 (sine, square, sawtooth, triangle)
+    oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // 주파수 설정 (440Hz는 A4음)
+    gainNode.gain.setValueAtTime(1, audioContext.currentTime); // 볼륨 설정
+
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.5); // 0.5초 후에 소리 끔
 }
 
 function startBlinking() {
