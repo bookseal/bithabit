@@ -38,7 +38,6 @@ export async function submitAttendance(id, startTime, duration) {
         if (response.ok) {
             const data = await response.json();
             console.log("Data: ", data); // Log the data received
-			captureBtn.innerHTML = '<i class="fas fa-check"></i> 출섹체크완료';
         } else {
 			captureBtn.innerHTML = '<i class="fas fa-camera"></i> Start';
 			captureBtn.classList.remove('btn-checking');

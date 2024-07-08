@@ -13,8 +13,10 @@ let isCapturingComplete = false;
 let startTime;
 let duration;
 let durationInterval;
+let blinkInterval;
 
 const CAPTURE_INTERVAL = 20; // seconds
+const TWENTY_MINUTES = 20 * 60 * 1000; // 20 minutes in milliseconds
 
 export function setupCapture(video, canvas, imagesContainer, recordingStatus, durationEl) {
     videoElement = video;
@@ -60,7 +62,6 @@ export function captureImage() {
     imgElement.className = 'captured-image';
     imgElement.onload = () => {
         capturedImagesContainer.prepend(imgElement);
-        // Limit the number of displayed images (e.g., to 20)
         const maxDisplayedImages = 200;
         while (capturedImagesContainer.children.length > maxDisplayedImages) {
             capturedImagesContainer.removeChild(capturedImagesContainer.lastChild);
@@ -73,20 +74,31 @@ function drawOverlay(context, canvasWidth, canvasHeight, barHeight) {
     const centerY = (canvasHeight - barHeight) / 2;
     const bottomY = canvasHeight - 10;
 
+    // Draw semi-transparent white bar
     context.globalAlpha = 0.5;
     context.fillStyle = 'white';
     context.fillRect(0, centerY, canvasWidth, barHeight);
     context.globalAlpha = 1.0;
 
+    // Set font properties
     context.font = '30px Arial';
     context.fillStyle = 'black';
-    context.textAlign = 'right';
-    context.fillText('BitHabit', canvasWidth / 2, centerY + barHeight / 2 + 10);
 
+    // Draw BitHabit text on the right
+    context.textAlign = 'right';
+    context.fillText('BitHabit', canvasWidth - 10, centerY + barHeight / 2 + 10);
+
+    // Draw user ID in the center
+    const userId = document.getElementById('userID').value; // Get user ID from input field
+    context.textAlign = 'center';
+    context.fillText(userId, canvasWidth / 2, centerY + barHeight / 2 + 10);
+
+    // Draw duration text on the left
     const durationText = durationElement.textContent;
     context.textAlign = 'left';
     context.fillText(durationText, 10, centerY + barHeight / 2 + 10);
 
+    // Draw date and time at the bottom
     const now = new Date();
     const dateTimeText = `${formatDate(now)} ${formatTime(now)}`;
     context.font = '20px Arial';
@@ -97,6 +109,7 @@ function drawOverlay(context, canvasWidth, canvasHeight, barHeight) {
     context.strokeText(dateTimeText, canvasWidth / 2, bottomY);
     context.fillText(dateTimeText, canvasWidth / 2, bottomY);
 }
+
 
 function showRecordingMessage() {
     recordingStatusElement.classList.remove('d-none');
@@ -111,7 +124,19 @@ function updateDuration() {
     const now = new Date();
 	duration = now - startTime;
     if (durationElement) durationElement.textContent = formatDuration(duration);
+	if (duration >= TWENTY_MINUTES && !blinkInterval) {
+		startBlinking();
+	}
 }
+
+function startBlinking() {
+    let isVisible = true;
+    blinkInterval = setInterval(() => {
+        isVisible = !isVisible;
+        durationElement.style.visibility = isVisible ? 'visible' : 'hidden';
+    }, 500); // Blink every 500ms
+}
+
 
 export function isCapturingInProgress() {
     return isCapturing;

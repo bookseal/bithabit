@@ -66,12 +66,26 @@ async function toggleCapturing() {
 	if (isFinish)
 		;
     else if (isCapturingInProgress()) {
+		isFinish = true;
 		duration = stopCapturing();
-        captureBtn.innerHTML = '<i class="fas fa-??"></i> Finish';
         captureBtn.classList.remove('btn-danger');
         switchCameraBtn.disabled = false;
 		await submitAttendance(id, startTime, duration);
         waitForFinalCapture();
+		captureBtn.innerHTML = '<i class="fas fa-check"></i> 출섹체크완료';
+		captureBtn.classList.add('btn-success');
+		captureBtn.classList.remove('btn-danger');
+		captureBtn.disabled = true;
+		captureBtn.style.pointerEvents = 'none';
+		captureBtn.style.backgroundColor = 'green';
+		captureBtn.style.borderColor = 'green';
+		captureBtn.style.color = 'white';
+		captureBtn.style.border = '1px solid green';
+		captureBtn.style.boxShadow = 'none';
+		captureBtn.style.textShadow = 'none';
+		captureBtn.style.transition = 'none';
+		captureBtn.style.opacity = '0.5';
+		captureBtn.style.cursor = 'default';
     } else if (!id) {
 		alert("Please enter your ID before starting.");
 	} else {
