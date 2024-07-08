@@ -62,7 +62,6 @@ export function captureImage() {
     imgElement.className = 'captured-image';
     imgElement.onload = () => {
         capturedImagesContainer.prepend(imgElement);
-        // Limit the number of displayed images (e.g., to 20)
         const maxDisplayedImages = 200;
         while (capturedImagesContainer.children.length > maxDisplayedImages) {
             capturedImagesContainer.removeChild(capturedImagesContainer.lastChild);
