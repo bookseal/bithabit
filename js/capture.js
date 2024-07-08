@@ -13,8 +13,10 @@ let isCapturingComplete = false;
 let startTime;
 let duration;
 let durationInterval;
+let blinkInterval;
 
 const CAPTURE_INTERVAL = 20; // seconds
+const TWENTY_MINUTES = 20 * 60 * 1000; // 20 minutes in milliseconds
 
 export function setupCapture(video, canvas, imagesContainer, recordingStatus, durationEl) {
     videoElement = video;
@@ -111,7 +113,19 @@ function updateDuration() {
     const now = new Date();
 	duration = now - startTime;
     if (durationElement) durationElement.textContent = formatDuration(duration);
+	if (duration >= TWENTY_MINUTES && !blinkInterval) {
+		startBlinking();
+	}
 }
+
+function startBlinking() {
+    let isVisible = true;
+    blinkInterval = setInterval(() => {
+        isVisible = !isVisible;
+        durationElement.style.visibility = isVisible ? 'visible' : 'hidden';
+    }, 500); // Blink every 500ms
+}
+
 
 export function isCapturingInProgress() {
     return isCapturing;
