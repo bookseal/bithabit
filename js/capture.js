@@ -16,7 +16,7 @@ let durationInterval;
 let blinkInterval;
 
 const CAPTURE_INTERVAL = 20; // seconds
-const TWENTY_MINUTES = 0.5 * 60 * 1000; // 20 minutes in milliseconds
+const TWENTY_MINUTES = 20 * 60 * 1000; // 20 minutes in milliseconds
 
 export function setupCapture(video, canvas, imagesContainer, recordingStatus, durationEl) {
     videoElement = video;
