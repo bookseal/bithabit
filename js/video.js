@@ -31,11 +31,12 @@ async function createGIFFromImages(images) {
     return new Promise((resolve, reject) => {
         console.log('Starting GIF creation...');
         const gif = new GIF({
-            workers: 1,
-            quality: 5,
+            workers: 2,
+            quality: 1,
             width: images[0].naturalWidth,
             height: images[0].naturalHeight,
             workerScript: 'js/gif.worker.js',
+			dither: false,
             createCanvas: function(width, height) {
                 const canvas = document.createElement('canvas');
                 canvas.width = width;
