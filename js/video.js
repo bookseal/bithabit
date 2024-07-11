@@ -73,7 +73,7 @@ async function createGIFFromImages(images) {
 
         setTimeout(() => {
             reject(new Error('GIF creation timed out after 60 seconds'));
-        }, 120000); // 60 second timeout
+        }, 120000);
     });
 }
 
