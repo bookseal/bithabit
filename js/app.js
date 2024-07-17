@@ -80,7 +80,6 @@ async function initializeCamera() {
     setupCapture(videoElement, canvasElement, capturedImagesContainer, recordingStatusElement, durationElement);
     await cameraModule.initialize();
 }
-
 async function toggleCapturing() {
 	let id = document.getElementById('userID').value.toLowerCase();
 	if (isFinish)
@@ -180,6 +179,5 @@ window.addEventListener('unhandledrejection', function(event) {
 
 function handleError(error, message) {
     console.error(message, error);
-	console.error("helo");
     errorMessageElement.textContent = message;
 }
