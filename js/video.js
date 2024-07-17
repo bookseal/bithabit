@@ -29,52 +29,83 @@ export async function createAndDisplayVideo(capturedImages) {
 
 async function createGIFFromImages(images) {
     return new Promise((resolve, reject) => {
-        console.log('Starting GIF creation...');
-        const gif = new GIF({
-            workers: 2,
-            quality: 1,
-            width: images[0].naturalWidth,
-            height: images[0].naturalHeight,
-            workerScript: 'js/gif.worker.js',
-			dither: false,
-            createCanvas: function(width, height) {
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d', { willReadFrequently: true });
-                return canvas;
-            }
-        });
-
-        console.log('GIF object created. Adding frames...');
-        for (let i = images.length - 1; i >= 0; i--) {
-            try {
-                gif.addFrame(images[i], {delay: 200});
-                console.log(`Added frame ${images.length - i} of ${images.length}`);
-            } catch (error) {
-                console.error(`Error adding frame ${images.length - i}:`, error);
-                reject(error);
-                return;
-            }
+        const gif = createGIFObject(images[0]);
+        try {
+            addFramesToGIF(gif, images);
+            setupGIFEvents(gif, resolve);
+            gif.render();
+            setupTimeout(reject);
+        } catch (error) {
+            console.error('Error during GIF creation:', error);
+            reject(error);
         }
-
-        console.log('All frames added. Starting render...');
-        gif.on('progress', (p) => {
-			console.log(`Rendering progress: ${(p * 100).toFixed(2)}%`);
-			updateProgressBar(p);
-		});
-
-        gif.on('finished', function(blob) {
-            console.log('GIF rendering finished');
-            resolve(blob);
-        });
-
-        gif.render();
-
-        setTimeout(() => {
-            reject(new Error('GIF creation timed out after 60 seconds'));
-        }, 120000);
     });
+}
+
+function createGIFObject(firstImage) {
+    return new GIF({
+        workers: 2,
+        quality: 1,
+        width: firstImage.naturalWidth,
+        height: firstImage.naturalHeight,
+        workerScript: 'js/gif.worker.js',
+        dither: false,
+        colors: 64,
+        createCanvas: createCanvas
+    });
+}
+
+function createCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    canvas.getContext('2d', { willReadFrequently: true });
+    return canvas;
+}
+
+function addFramesToGIF(gif, images) {
+    if (images.length >= 1) {
+        gif.addFrame(images[0], { delay: 1000 });
+    }
+    const framesToAdd = images.length >= 70 ? addReducedFrames : addAllFrames;
+    framesToAdd(gif, images);
+}
+
+function addReducedFrames(gif, images) {
+    for (let i = images.length - 1; i >= 0; i -= 2) {
+        addFrame(gif, images[i], i, images.length);
+    }
+}
+
+function addAllFrames(gif, images) {
+    for (let i = images.length - 1; i >= 0; i--) {
+        addFrame(gif, images[i], i, images.length);
+    }
+}
+
+function addFrame(gif, image, index, totalFrames) {
+    try {
+        gif.addFrame(image, { delay: 200 });
+    } catch (error) {
+        console.error(`Error adding frame ${totalFrames - index}:`, error);
+        throw error;
+    }
+}
+
+function setupGIFEvents(gif, resolve) {
+    gif.on('progress', (progress) => {
+        updateProgressBar(progress);
+    });
+
+    gif.on('finished', (blob) => {
+        resolve(blob);
+    });
+}
+
+function setupTimeout(reject) {
+    setTimeout(() => {
+        reject(new Error('GIF creation timed out after 20 minutes'));
+    }, 1200000); // 20 minute timeout
 }
 
 function updateProgressBar(progress) {
