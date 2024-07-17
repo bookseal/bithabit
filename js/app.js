@@ -151,4 +151,3 @@ function handleError(error, message) {
     console.error(message, error);
     errorMessageElement.textContent = message;
 }
-
