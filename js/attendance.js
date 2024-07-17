@@ -23,7 +23,7 @@ function prepareFormData(id, startTime, duration) {
     const formData = new URLSearchParams();
     formData.append('id', id);
     formData.append('in', startTime.toISOString());
-    formData.append('duration', duration / 1000 / 60);
+    formData.append('duration', Math.round(duration / 1000 / 60));
     formData.append('device', getDeviceInfo());
     formData.append('browser', getBrowserInfo());
     return formData;
@@ -35,14 +35,14 @@ function getDeviceInfo() {
 
 function getBrowserInfo() {
     const ua = navigator.userAgent;
-    let browserName;
-    if (ua.match(/chrome|chromium|crios/i)) browserName = "Chrome";
-    else if (ua.match(/firefox|fxios/i)) browserName = "Firefox";
-    else if (ua.match(/safari/i)) browserName = "Safari";
-    else if (ua.match(/opr\//i)) browserName = "Opera";
-    else if (ua.match(/edg/i)) browserName = "Edge";
-    else browserName = "Unknown";
-    return browserName;
+    // let browserName;
+    // if (ua.match(/chrome|chromium|crios/i)) browserName = "Chrome";
+    // else if (ua.match(/firefox|fxios/i)) browserName = "Firefox";
+    // else if (ua.match(/safari/i)) browserName = "Safari";
+    // else if (ua.match(/opr\//i)) browserName = "Opera";
+    // else if (ua.match(/edg/i)) browserName = "Edge";
+    // else browserName = "Unknown";
+    return ua;
 }
 
 async function sendAttendanceData(formData) {
