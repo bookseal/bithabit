@@ -133,9 +133,25 @@ function displayVideo(url, type) {
     }
 
 	const instruction = document.createElement('p');
-	instruction.innerHTML = '<strong>1. 위에 움직이는 사진을 오래 누르고 "복사하기" 누르기</strong><br><strong>2. 공유버튼을 누르지 마시고 카톡앱을 실행하여 해당 오픈채팅방에 붙여넣기</strong>';
+	const isIphone = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+	const isChrome = /Chrome|CriOS/i.test(navigator.userAgent);
+	let msg;
+	if (isIphone) {
+		msg = '1. 위의 움직이는 사진을 오래 누르고';
+		if (isChrome) {
+			msg += '"포토에 저장" 클릭<br>';
+		}
+		else {
+			msg += '"사진 앱에 저장" 클릭<br>';
+		}
+	} else {
+		msg = '1. 아래의 다운로드 버튼을 눌러 움직이는 사진을 다운로드<br>';
+	}
+	msg += '2. 카카오톡앱 실행 후 해당 오픈채팅방에 움직이는 사진 전송';
+	
+	instruction.innerHTML = msg;
 	container.appendChild(instruction);
-	 container.style.display = 'block';
+	container.style.display = 'block';
     setTimeout(() => {
         container.scrollIntoView({behavior: 'smooth', block: 'start'});
     }, 100);

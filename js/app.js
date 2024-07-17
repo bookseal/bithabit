@@ -5,65 +5,81 @@ import { createAndDisplayVideo } from './video.js';
 import { setupCapture, startCapturing, stopCapturing, isCapturingInProgress, isCaptureComplete, pauseCapturing } from './capture.js';
 import { submitAttendance } from './attendance.js';
 
-let stream;
-let videoElement;
-let canvasElement;
-let captureBtn;
-let pauseBtn;
-let switchCameraBtn;
-let recordingStatusElement;
-let durationElement;
-let errorMessageElement;
-let capturedImagesContainer;
+let videoElement, canvasElement, captureBtn, pauseBtn, switchCameraBtn,
+    recordingStatusElement, durationElement, errorMessageElement, capturedImagesContainer, cameraModule;
 
+let stream;
 let isCapturing = false;
 let isFinish = false;
 let captureInterval;
 let durationInterval;
 let blobUrl;
-let cameraModule;
 let startTime;
 let duration;
 
 async function initializeApp() {
-    videoElement = document.getElementById('video');
-    canvasElement = document.getElementById('canvas');
-    captureBtn = document.getElementById('captureBtn');
-	pauseBtn = document.getElementById('pauseBtn');
-    switchCameraBtn = document.getElementById('switchCameraBtn');
-    recordingStatusElement = document.getElementById('recordingStatus');
-    durationElement = document.getElementById('duration');
-    errorMessageElement = document.getElementById('errorMessage');
-    capturedImagesContainer = document.getElementById('capturedImages');
+    await setupEventListeners();
+    await checkBrowserCompatibility();
+    await initializeCamera();
+}
 
-	const userIDInput = document.getElementById('userID');
-	const savedUserID = localStorage.getItem('userID');
-	if (savedUserID) {
-		userIDInput.value = savedUserID;
-	}
+function setupEventListeners() {
+	return new Promise((resolve, reject) => {
+		videoElement = document.getElementById('video');
+		canvasElement = document.getElementById('canvas');
+		captureBtn = document.getElementById('captureBtn');
+		pauseBtn = document.getElementById('pauseBtn');
+		switchCameraBtn = document.getElementById('switchCameraBtn');
+		recordingStatusElement = document.getElementById('recordingStatus');
+		durationElement = document.getElementById('duration');
+		errorMessageElement = document.getElementById('errorMessage');
+		capturedImagesContainer = document.getElementById('capturedImages');
 
-	userIDInput.addEventListener('input', function () {
-		localStorage.setItem('userID', userIDInput.value);
+	    const userIDInput = document.getElementById('userID');
+	    const savedUserID = localStorage.getItem('userID');
+	    if (savedUserID) {
+	        userIDInput.value = savedUserID;
+	    }
+	    userIDInput.addEventListener('input', function () {
+	        localStorage.setItem('userID', userIDInput.value);
+	    });
+
+	    captureBtn.addEventListener('click', toggleCapturing);
+	    switchCameraBtn.addEventListener('click', switchCamera);
+	    pauseBtn.addEventListener('click', pauseCapturing);
+		resolve();
 	});
-	
-    captureBtn.addEventListener('click', toggleCapturing);
-    switchCameraBtn.addEventListener('click', switchCamera);
-	pauseBtn.addEventListener('click', pauseCapturing);
+}
 
+function checkBrowserCompatibility() {
+    return new Promise((resolve, reject) => {
+        const isKaKaotalk = /KAKAOTALK/i.test(navigator.userAgent);
+        if (isKaKaotalk) {
+            handleKakaotalk();
+            reject(new Error('Kakaotalk browser not supported'));
+        }
+		resolve();
+    });
+}
+
+function handleKakaotalk() {
+    const title = document.getElementById('title');
+    title.textContent = '카카오톡 브라우저에서는 출석체크가 불가능합니다. 아이폰(사파리) 또는 갤럭시(크롬) 브라우저를 사용해주세요';
+    
+    const link = document.createElement('a');
+    link.href = 'kakaotalk://web/openExternal?url=https://bit-habit.com';
+    link.textContent = '기본브라우저로 열기';
+    title.appendChild(link);
+    
+    document.getElementById('attendanceForm').style.display = 'none';
+    window.location.href = "kakaotalk://web/openExternal?url=https://bit-habit.com";
+}
+
+async function initializeCamera() {
     cameraModule = setupCamera(videoElement);
-	setupCapture(videoElement, canvasElement, capturedImagesContainer, recordingStatusElement, durationElement);
-	await cameraModule.initialize();
+    setupCapture(videoElement, canvasElement, capturedImagesContainer, recordingStatusElement, durationElement);
+    await cameraModule.initialize();
 }
-
-function waitForFinalCapture() {
-    if (isCaptureComplete()) {
-        const capturedImages = Array.from(document.querySelectorAll('.captured-image'));
-        createAndDisplayVideo(capturedImages);
-    } else {
-        setTimeout(waitForFinalCapture, 100);
-    }
-}
-
 async function toggleCapturing() {
 	let id = document.getElementById('userID').value.toLowerCase();
 	if (isFinish)
@@ -144,6 +160,15 @@ document.getElementById('userID').addEventListener('keypress', function(event) {
 		document.getElementById('captureBtn').click(); // Programmatically click the capture button
 	}
 });
+
+function waitForFinalCapture() {
+    if (isCaptureComplete()) {
+        const capturedImages = Array.from(document.querySelectorAll('.captured-image'));
+        createAndDisplayVideo(capturedImages);
+    } else {
+        setTimeout(waitForFinalCapture, 100);
+    }
+}
 
 document.addEventListener('DOMContentLoaded', initializeApp);
 window.addEventListener('beforeunload', cleanup);
