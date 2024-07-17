@@ -89,6 +89,11 @@ async function toggleCapturing() {
 		captureBtn.style.transition = 'none';
 		captureBtn.style.opacity = '0.5';
 		captureBtn.style.cursor = 'default';
+		pauseBtn.disabled = true;
+		pauseBtn.style.pointerEvents = 'none';
+		pauseBtn.style.backgroundColor = 'gray';
+		pauseBtn.style.borderColor = 'gray';
+		pauseBtn.style.color = 'white';
     } else if (!id) {
 		alert("Please enter your ID before starting.");
 	} else {
