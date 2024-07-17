@@ -2,13 +2,14 @@
 
 import { setupCamera } from './camera.js';
 import { createAndDisplayVideo } from './video.js';
-import { setupCapture, startCapturing, stopCapturing, isCapturingInProgress, isCaptureComplete } from './capture.js';
+import { setupCapture, startCapturing, stopCapturing, isCapturingInProgress, isCaptureComplete, pauseCapturing } from './capture.js';
 import { submitAttendance } from './attendance.js';
 
 let stream;
 let videoElement;
 let canvasElement;
 let captureBtn;
+let pauseBtn;
 let switchCameraBtn;
 let recordingStatusElement;
 let durationElement;
@@ -28,6 +29,7 @@ async function initializeApp() {
     videoElement = document.getElementById('video');
     canvasElement = document.getElementById('canvas');
     captureBtn = document.getElementById('captureBtn');
+	pauseBtn = document.getElementById('pauseBtn');
     switchCameraBtn = document.getElementById('switchCameraBtn');
     recordingStatusElement = document.getElementById('recordingStatus');
     durationElement = document.getElementById('duration');
@@ -46,6 +48,7 @@ async function initializeApp() {
 	
     captureBtn.addEventListener('click', toggleCapturing);
     switchCameraBtn.addEventListener('click', switchCamera);
+	pauseBtn.addEventListener('click', pauseCapturing);
 
     cameraModule = setupCamera(videoElement);
 	setupCapture(videoElement, canvasElement, capturedImagesContainer, recordingStatusElement, durationElement);

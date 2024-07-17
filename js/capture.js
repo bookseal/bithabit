@@ -9,8 +9,11 @@ let recordingStatusElement;
 let durationElement;
 let captureInterval;
 let isCapturing = false;
+let isPaused = false;
 let isCapturingComplete = false;
 let startTime;
+let pauseStartTime;
+let totalPausedTime = 0;
 let duration;
 let durationInterval;
 let blinkInterval;
@@ -26,8 +29,28 @@ export function setupCapture(video, canvas, imagesContainer, recordingStatus, du
     durationElement = durationEl;
 }
 
+export function pauseCapturing() {
+	if (isPaused) {
+		isPaused = false;
+		totalPausedTime += new Date() - pauseStartTime;
+		pauseStartTime = null;
+		pauseBtn.textContent = 'Pause';
+		captureInterval = setInterval(captureImage, CAPTURE_INTERVAL * 1000);
+		durationInterval = setInterval(updateDuration, 1000);
+		stopBlinking();
+	} else {
+		isPaused = true;
+		pauseStartTime = new Date();
+		clearInterval(captureInterval);
+		clearInterval(durationInterval);
+		pauseBtn.textContent = 'Resume';
+		startBlinking();
+	}
+}
+
 export function startCapturing(_startTime) {
     isCapturing = true;
+	isPaused = false;
 	startTime = _startTime;
     updateTimeDisplay();
     durationInterval = setInterval(updateDuration, 1000);
@@ -38,6 +61,7 @@ export function startCapturing(_startTime) {
 
 export function stopCapturing() {
     isCapturing = false;
+	isPaused = false;
     captureImage();
     clearInterval(captureInterval);
     clearInterval(durationInterval);
@@ -46,6 +70,7 @@ export function stopCapturing() {
 }
 
 export function captureImage() {
+	if (isPaused) return;
     isCapturingComplete = false;
     const context = canvasElement.getContext('2d');
     const barHeight = 50;
@@ -122,7 +147,7 @@ function updateTimeDisplay() {
 
 function updateDuration() {
     const now = new Date();
-	duration = now - startTime;
+	duration = now - startTime - totalPausedTime;
     if (durationElement) durationElement.textContent = formatDuration(duration);
 	if (duration >= TWENTY_MINUTES && !blinkInterval) {
 		startBlinking();
@@ -154,6 +179,11 @@ function startBlinking() {
     }, 500); // Blink every 500ms
 }
 
+function stopBlinking() {
+	clearInterval(blinkInterval);
+	blinkInterval = null;
+	durationElement.style.visibility = 'visible';
+}
 
 export function isCapturingInProgress() {
     return isCapturing;
