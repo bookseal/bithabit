@@ -46,6 +46,10 @@ function getBrowserInfo() {
 }
 
 async function sendAttendanceData(formData) {
+	const captureBtn = document.getElementById("captureBtn");
+	captureBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 출석체크 중...';
+    captureBtn.classList.add('btn-checking');
+
     const response = await fetch(
         "https://script.google.com/macros/s/AKfycbz8xJpNZmECdex3fcykRQEyQ_UpHzYDe3vKl_nNGC1ELgA0JWzwLRbdaaCKuccZ4h8Lxg/exec",
         {
