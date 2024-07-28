@@ -6,16 +6,6 @@ body {
     max-width: 800px;
 }
 
-.video-container {
-    position: relative;
-    width: 100%;
-    max-width: 480px;
-    margin: 0 auto;
-    border-radius: 15px;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
 #video {
     width: 100%;
     height: auto;
@@ -30,6 +20,35 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+}
+
+.video-container {
+    position: relative;
+    width: 80%;  /* Changed from 100% to 80% */
+    max-width: 384px;  /* Changed from 480px to 384px (80% of 480px) */
+    margin: 0 auto;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transform: scale(0.8);  /* Added to scale down the container */
+    transform-origin: top center;  /* Scale from the top center */
+}
+
+/* Adjust the margin to compensate for the scaling */
+.video-container::after {
+    content: '';
+    display: block;
+    padding-bottom: 20%;  /* This creates space below the scaled container */
+}
+
+/* Adjust other elements if necessary */
+.control-overlay {
+    transform: scale(1.25);  /* Scale up the controls to counteract container scaling */
+    transform-origin: center bottom;
+}
+
+#timeDisplay {
+    transform: scale(1.25) translateX(-40%);  /* Scale up and adjust position */
 }
 
 .overlay {
@@ -48,25 +67,6 @@ body {
     text-align: center;
     width: auto;
     white-space: nowrap;
-}
-
-.control-overlay {
-    position: absolute;
-    bottom: 20px;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-}
-
-.title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #333;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 1.5rem;
 }
 
 .form-label {
@@ -229,4 +229,73 @@ body {
 #gif-progress-bar::-moz-progress-bar {
     background-color: #FF3B30;
     border-radius: 10px;
+}
+
+.user-id-container {
+    max-width: 480px;
+    margin: 20px auto;
+    display: flex;
+    align-items: center;
+}
+
+.header {
+    background-color: #4a90e2;
+    padding: 10px 20px;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.date-display {
+    color: white;
+    font-size: 16px;
+}
+
+.user-id-label {
+    font-weight: bold;
+    margin-right: 10px;
+    color: #333;
+    white-space: nowrap;
+}
+
+.user-id-input-wrapper {
+    position: relative;
+    flex-grow: 1;
+}
+
+.user-id-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+}
+
+.user-id-input {
+    width: 100%;
+    padding: 10px 15px 10px 40px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+.user-id-input:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.user-id-input::placeholder {
+    color: #aab7c4;
 }
