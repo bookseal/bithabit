@@ -24,7 +24,7 @@ body {
 
 .video-container {
     position: relative;
-    width: 80%;  /* Changed from 100% to 80% */
+    width: 100%;  /* Changed from 100% to 80% */
     max-width: 384px;  /* Changed from 480px to 384px (80% of 480px) */
     margin: 0 auto;
     border-radius: 15px;
