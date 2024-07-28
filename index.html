@@ -11,13 +11,21 @@
     <link href="styles.css" rel="stylesheet">
 </head>
 <body>
+	<header class="header">
+		<div class="header-content">
+			<a href="#" class="logo">BitHabit</a>
+			<div class="date-display" id="dateDisplay"></div>
+		</div>
+	</header>
+
     <div class="container mt-1">
-        <h1 id="title" class="text-center title">BitHabit Web Camera</h1>
 		<form id="attendanceForm" onsubmit="return false;">
-			<div class="mb-3 d-flex align-items-center">
-                <label for="userID" class="form-label me-2">User ID:</label>
-                <input type="text" class="form-control flex-grow-1" id="userID" placeholder="Enter your ID" required>
-            </div>
+			<div class="user-id-container">
+				<label for="userID" class="user-id-label">User ID:</label>
+				<div class="user-id-input-wrapper">
+					<input type="text" class="user-id-input" id="userID" placeholder="Enter your ID" required>
+				</div>
+			</div>
 	        <div class="video-container">
 	            <video id="video" autoplay playsinline></video>
 	            <canvas id="canvas" style="display:none;"></canvas>
@@ -45,6 +53,7 @@
 	<script type="module" src="./js/utils.js"></script>
 	<script type="module" src="./js/camera.js"></script>
 	<script type="module" src="./js/app.js"></script>
+	<script src="./js/navbar.js"></script>
 	
 </body>
 </html>
