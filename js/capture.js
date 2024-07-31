@@ -75,13 +75,13 @@ export function captureImage() {
     const context = canvasElement.getContext('2d');
     const barHeight = 50;
 
-    canvasElement.width = videoElement.videoWidth;
-    canvasElement.height = videoElement.videoHeight;
+    canvasElement.width = videoElement.videoWidth / 2;
+    canvasElement.height = videoElement.videoHeight / 2;
 
     context.drawImage(videoElement, 0, 0);
     drawOverlay(context, canvasElement.width, canvasElement.height, barHeight);
 
-    const imageDataUrl = canvasElement.toDataURL('image/jpeg');
+    const imageDataUrl = canvasElement.toDataURL('image/jpeg', 0.5);
     const imgElement = document.createElement('img');
     imgElement.src = imageDataUrl;
     imgElement.className = 'captured-image';
