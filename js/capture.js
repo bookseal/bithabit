@@ -75,8 +75,8 @@ export function captureImage() {
     const context = canvasElement.getContext('2d');
     const barHeight = 40;
 
-    canvasElement.width = videoElement.videoWidth / 2;
-    canvasElement.height = videoElement.videoHeight / 2;
+    canvasElement.width = 240;
+    canvasElement.height = 320;
 
     context.drawImage(videoElement, 0, 0);
     drawOverlay(context, canvasElement.width, canvasElement.height, barHeight);
@@ -94,10 +94,11 @@ export function captureImage() {
         isCapturingComplete = true;
     };
 }
+
 function drawOverlay(context, canvasWidth, canvasHeight, barHeight) {
-    const topY = 5;
+    const topY = 0;
     const centerY = (canvasHeight - barHeight) / 2;
-    const bottomY = canvasHeight - 5;
+    const bottomY = canvasHeight - 2;
 
     // Draw top semi-transparent white bar
     context.globalAlpha = 0.5;
@@ -109,30 +110,32 @@ function drawOverlay(context, canvasWidth, canvasHeight, barHeight) {
     context.globalAlpha = 1.0;
 
     // Set font properties for main text
-    context.font = '15px "Helvetica Neue", Arial, sans-serif';
+    context.font = '12px "Helvetica Neue", Arial, sans-serif';
     context.fillStyle = 'black';
 
     // Draw dailyGoal on the top bar
     const dailyGoal = document.getElementById('dailyGoal').value;
     context.textAlign = 'center';
-    context.fillText(`Goal: ${dailyGoal}`, canvasWidth / 2, topY + barHeight / 2 + 5);
+    context.fillText(`Goal: ${dailyGoal}`, canvasWidth / 2, topY + barHeight / 2 + 4);
 
     // Draw bit-habit.com text on the right
     context.textAlign = 'right';
-    context.fillText('bit-habit.com', canvasWidth - 5, centerY + barHeight / 2 + 5);
+    context.font = '10px "Helvetica Neue", Arial, sans-serif';
+    context.fillText('bit-habit.com', canvasWidth - 3, centerY + barHeight / 2 + 4);
 
     // Draw user ID in the center
     const userId = document.getElementById('userID').value;
     context.textAlign = 'center';
-    context.fillText(userId, canvasWidth / 2, centerY + barHeight / 2 + 5);
+    context.font = '12px "Helvetica Neue", Arial, sans-serif';
+    context.fillText(userId, canvasWidth / 2, centerY + barHeight / 2 + 4);
 
     // Draw duration text on the left
     const durationText = durationElement.textContent;
     context.textAlign = 'left';
-    context.fillText(durationText, 5, centerY + barHeight / 2 + 5);
+    context.fillText(durationText, 3, centerY + barHeight / 2 + 4);
 
     // Set font properties for date and time
-    context.font = '12px "Helvetica Neue", Arial, sans-serif';
+    context.font = '10px "Helvetica Neue", Arial, sans-serif';
 
     // Draw date and time at the bottom
     const now = new Date();
@@ -140,7 +143,7 @@ function drawOverlay(context, canvasWidth, canvasHeight, barHeight) {
     context.textAlign = 'center';
     context.fillStyle = 'white';
     context.strokeStyle = 'black';
-    context.lineWidth = 2;
+    context.lineWidth = 1;
     context.strokeText(dateTimeText, canvasWidth / 2, bottomY);
     context.fillText(dateTimeText, canvasWidth / 2, bottomY);
 }
