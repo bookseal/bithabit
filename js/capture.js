@@ -121,7 +121,7 @@ function drawOverlay(context, canvasWidth, canvasHeight, barHeight) {
     // Draw bit-habit.com text on the right
     context.textAlign = 'right';
     context.font = '10px "Helvetica Neue", Arial, sans-serif';
-    context.fillText('bit-habit.com', canvasWidth - 3, centerY + barHeight / 2 + 4);
+    context.fillText('BitHabit', canvasWidth - 3, centerY + barHeight / 2 + 4);
 
     // Draw user ID in the center
     const userId = document.getElementById('userID').value;
