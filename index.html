@@ -18,27 +18,32 @@
 		</div>
 	</header>
 
-    <div class="container mt-1">
+	<div class="container">
 		<form id="attendanceForm" onsubmit="return false;">
-			<div class="user-id-container">
-				<label for="userID" class="user-id-label">User ID:</label>
-				<div class="user-id-input-wrapper">
-					<input type="text" class="user-id-input" id="userID" placeholder="Enter your ID" required>
+			<div class="input-container">
+				<div class="input-field">
+					<label for="userID" class="input-label">User ID:</label>
+					<input type="text" class="custom-input" id="userID" placeholder="Enter your ID" required>
+				</div>
+				<div class="input-field">
+					<label for="dailyGoal" class="input-label">오늘 공부 목표:</label>
+					<input type="text" class="custom-input" id="dailyGoal" placeholder="Enter your daily goal (Optional)">
 				</div>
 			</div>
-	        <div class="video-container">
-	            <video id="video" autoplay playsinline></video>
-	            <canvas id="canvas" style="display:none;"></canvas>
-	            <div id="recordingStatus" class="d-none"></div>
-	            <div id="timeDisplay" class="overlay">
-	                <div><span id="duration">00:00:00</span></div>
-	            </div>
-	            <div class="control-overlay">
-	                <button id="switchCameraBtn" class="btn-custom"><i class="fas fa-camera-rotate"></i></button>
-                    <button id="captureBtn" class="btn-custom btn-capture" type="button"><i class="fas fa-camera"></i> Start</button>
+
+			<div class="video-container">
+				<video id="video" autoplay playsinline></video>
+				<canvas id="canvas" style="display:none;"></canvas>
+				<div id="recordingStatus" class="d-none"></div>
+				<div id="timeDisplay" class="overlay">
+					<span id="duration">00:00:00</span>
+				</div>
+				<div class="control-overlay">
+					<button id="switchCameraBtn" class="btn-custom"><i class="fas fa-camera-rotate"></i></button>
+					<button id="captureBtn" class="btn-custom btn-capture" type="button"><i class="fas fa-camera"></i> Start</button>
 					<button id="pauseBtn" class="btn-custom"><i class="fas fa-pause"></i> Pause</button>
-	            </div>
-	        </div>
+				</div>
+			</div>
 			<div id="message" class="text-center mt-3"></div>
 			<div id="errorMessage" class="text-center"></div>
 			<div id="gif-progress" style="display: none; width: 100%; max-width: 640px; margin: 20px auto;">

@@ -24,31 +24,47 @@ async function initializeApp() {
 }
 
 function setupEventListeners() {
-	return new Promise((resolve, reject) => {
-		videoElement = document.getElementById('video');
-		canvasElement = document.getElementById('canvas');
-		captureBtn = document.getElementById('captureBtn');
-		pauseBtn = document.getElementById('pauseBtn');
-		switchCameraBtn = document.getElementById('switchCameraBtn');
-		recordingStatusElement = document.getElementById('recordingStatus');
-		durationElement = document.getElementById('duration');
-		errorMessageElement = document.getElementById('errorMessage');
-		capturedImagesContainer = document.getElementById('capturedImages');
+    return new Promise((resolve, reject) => {
+        videoElement = document.getElementById('video');
+        canvasElement = document.getElementById('canvas');
+        captureBtn = document.getElementById('captureBtn');
+        pauseBtn = document.getElementById('pauseBtn');
+        switchCameraBtn = document.getElementById('switchCameraBtn');
+        recordingStatusElement = document.getElementById('recordingStatus');
+        durationElement = document.getElementById('duration');
+        errorMessageElement = document.getElementById('errorMessage');
+        capturedImagesContainer = document.getElementById('capturedImages');
 
-	    const userIDInput = document.getElementById('userID');
-	    const savedUserID = localStorage.getItem('userID');
-	    if (savedUserID) {
-	        userIDInput.value = savedUserID;
-	    }
-	    userIDInput.addEventListener('input', function () {
-	        localStorage.setItem('userID', userIDInput.value);
-	    });
+        const userIDInput = document.getElementById('userID');
+        const dailyGoalInput = document.getElementById('dailyGoal');
 
-	    captureBtn.addEventListener('click', toggleCapturing);
-	    switchCameraBtn.addEventListener('click', switchCamera);
-	    pauseBtn.addEventListener('click', pauseCapturing);
-		resolve();
-	});
+        // Load saved userID
+        const savedUserID = localStorage.getItem('userID');
+        if (savedUserID) {
+            userIDInput.value = savedUserID;
+        }
+
+        // Load saved dailyGoal
+        const savedDailyGoal = localStorage.getItem('dailyGoal');
+        if (savedDailyGoal) {
+            dailyGoalInput.value = savedDailyGoal;
+        }
+
+        // Save userID on input
+        userIDInput.addEventListener('input', function () {
+            localStorage.setItem('userID', userIDInput.value);
+        });
+
+        // Save dailyGoal on input
+        dailyGoalInput.addEventListener('input', function () {
+            localStorage.setItem('dailyGoal', dailyGoalInput.value);
+        });
+
+        captureBtn.addEventListener('click', toggleCapturing);
+        switchCameraBtn.addEventListener('click', switchCamera);
+        pauseBtn.addEventListener('click', pauseCapturing);
+        resolve();
+    });
 }
 
 function checkBrowserCompatibility() {
@@ -82,6 +98,7 @@ async function initializeCamera() {
 }
 async function toggleCapturing() {
 	let id = document.getElementById('userID').value.toLowerCase();
+	let dailyGoal = document.getElementById('dailyGoal').value;
 	if (isFinish)
 		;
     else if (isCapturingInProgress()) {
@@ -89,7 +106,7 @@ async function toggleCapturing() {
 		duration = stopCapturing();
         captureBtn.classList.remove('btn-danger');
         switchCameraBtn.disabled = false;
-		await submitAttendance(id, startTime, duration);
+		await submitAttendance(id, dailyGoal, startTime, duration);
         waitForFinalCapture();
 		captureBtn.innerHTML = '<i class="fas fa-check"></i> 출섹체크완료';
 		captureBtn.classList.add('btn-success');
