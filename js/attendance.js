@@ -1,8 +1,8 @@
 // attendance.js
 
-export async function submitAttendance(id, startTime, duration) {
+export async function submitAttendance(id, dailyGoal, startTime, duration) {
     validateId(id);
-    const formData = prepareFormData(id, startTime, duration);
+    const formData = prepareFormData(id, dailyGoal, startTime, duration);
     
     try {
         await sendAttendanceData(formData);
@@ -19,9 +19,10 @@ function validateId(id) {
     }
 }
 
-function prepareFormData(id, startTime, duration) {
+function prepareFormData(id, dailyGoal, startTime, duration) {
     const formData = new URLSearchParams();
     formData.append('id', id);
+	formData.append('dailyGoal', dailyGoal);
     formData.append('in', startTime.toISOString());
     formData.append('duration', Math.round(duration / 1000 / 60));
     formData.append('device', getDeviceInfo());

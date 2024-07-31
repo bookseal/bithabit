@@ -38,13 +38,19 @@ body {
     margin-top: 5px;
 }
 
-/* Input Styles */
-.input-group {
+/* Input Container Style */
+.input-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     margin-bottom: 20px;
 }
 
+/* Input Styles */
 .input-field {
     margin-bottom: 15px;
+    width: 100%;
+    max-width: 400px; /* Adjust this value as needed */
 }
 
 .input-label {
@@ -52,6 +58,7 @@ body {
     margin-bottom: 5px;
     font-weight: bold;
     color: #333;
+    text-align: left;
 }
 
 .custom-input {
@@ -67,6 +74,16 @@ body {
     outline: none;
     border-color: #4a90e2;
     box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 600px) {
+    .container {
+        padding: 10px;
+    }
+    .input-field {
+        max-width: 100%;
+    }
 }
 
 /* Video Container Styles */
@@ -103,13 +120,13 @@ body {
 
 .control-overlay {
     position: absolute;
-    bottom: 10px;
+    bottom: 15px;  /* Slightly increased from 10px to give more space */
     left: 0;
     right: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 10px;
+    gap: 15px;  /* Increased gap between buttons */
 }
 
 /* Button Styles */
@@ -144,4 +161,18 @@ body {
     .container {
         padding: 10px;
     }
+}
+
+#recordingStatus {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 0, 0, 0.7);  /* 반투명한 빨간색 배경 */
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 18px;
+    font-weight: bold;
+    z-index: 1000;  /* 다른 요소들 위에 표시되도록 */
 }

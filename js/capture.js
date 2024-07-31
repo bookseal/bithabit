@@ -73,7 +73,7 @@ export function captureImage() {
 	if (isPaused) return;
     isCapturingComplete = false;
     const context = canvasElement.getContext('2d');
-    const barHeight = 50;
+    const barHeight = 40;
 
     canvasElement.width = videoElement.videoWidth / 2;
     canvasElement.height = videoElement.videoHeight / 2;
@@ -94,47 +94,56 @@ export function captureImage() {
         isCapturingComplete = true;
     };
 }
-
 function drawOverlay(context, canvasWidth, canvasHeight, barHeight) {
+    const topY = 5;
     const centerY = (canvasHeight - barHeight) / 2;
-    const bottomY = canvasHeight - 10;
+    const bottomY = canvasHeight - 5;
 
-    // Draw semi-transparent white bar
+    // Draw top semi-transparent white bar
     context.globalAlpha = 0.5;
     context.fillStyle = 'white';
+    context.fillRect(0, topY, canvasWidth, barHeight);
+
+    // Draw center semi-transparent white bar
     context.fillRect(0, centerY, canvasWidth, barHeight);
     context.globalAlpha = 1.0;
 
-    // Set font properties
-    context.font = '30px Arial';
+    // Set font properties for main text
+    context.font = '15px "Helvetica Neue", Arial, sans-serif';
     context.fillStyle = 'black';
 
-    // Draw BitHabit text on the right
+    // Draw dailyGoal on the top bar
+    const dailyGoal = document.getElementById('dailyGoal').value;
+    context.textAlign = 'center';
+    context.fillText(`Goal: ${dailyGoal}`, canvasWidth / 2, topY + barHeight / 2 + 5);
+
+    // Draw bit-habit.com text on the right
     context.textAlign = 'right';
-    context.fillText('BitHabit', canvasWidth - 10, centerY + barHeight / 2 + 10);
+    context.fillText('bit-habit.com', canvasWidth - 5, centerY + barHeight / 2 + 5);
 
     // Draw user ID in the center
-    const userId = document.getElementById('userID').value; // Get user ID from input field
+    const userId = document.getElementById('userID').value;
     context.textAlign = 'center';
-    context.fillText(userId, canvasWidth / 2, centerY + barHeight / 2 + 10);
+    context.fillText(userId, canvasWidth / 2, centerY + barHeight / 2 + 5);
 
-    // Draw duration text on the left 
+    // Draw duration text on the left
     const durationText = durationElement.textContent;
     context.textAlign = 'left';
-    context.fillText(durationText, 10, centerY + barHeight / 2 + 10);
+    context.fillText(durationText, 5, centerY + barHeight / 2 + 5);
+
+    // Set font properties for date and time
+    context.font = '12px "Helvetica Neue", Arial, sans-serif';
 
     // Draw date and time at the bottom
     const now = new Date();
     const dateTimeText = `${formatDate(now)} ${formatTime(now)}`;
-    context.font = '20px Arial';
     context.textAlign = 'center';
     context.fillStyle = 'white';
     context.strokeStyle = 'black';
-    context.lineWidth = 3;
+    context.lineWidth = 2;
     context.strokeText(dateTimeText, canvasWidth / 2, bottomY);
     context.fillText(dateTimeText, canvasWidth / 2, bottomY);
 }
-
 
 function showRecordingMessage() {
     recordingStatusElement.classList.remove('d-none');
