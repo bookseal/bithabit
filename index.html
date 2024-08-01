@@ -21,16 +21,19 @@
 	<div class="container">
 		<form id="attendanceForm" onsubmit="return false;">
 			<div class="input-container">
-				<div class="input-field">
-					<label for="userID" class="input-label">User ID:</label>
+				<div class="input-row">
+				  <label for="userID" class="input-label">User ID :</label>
+				  <div class="input-field">
 					<input type="text" class="custom-input" id="userID" placeholder="Enter your ID" required>
+				  </div>
 				</div>
-				<div class="input-field">
-					<label for="dailyGoal" class="input-label">오늘 공부 목표:</label>
+				<div class="input-row">
+				  <label for="dailyGoal" class="input-label">오늘 공부 목표:</label>
+				  <div class="input-field">
 					<input type="text" class="custom-input" id="dailyGoal" placeholder="Enter your daily goal (Optional)">
+				  </div>
 				</div>
-			</div>
-
+			  </div>
 			<div class="video-container">
 				<video id="video" autoplay playsinline></video>
 				<canvas id="canvas" style="display:none;"></canvas>
