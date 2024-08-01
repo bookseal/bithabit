@@ -68,20 +68,34 @@ export function stopCapturing() {
     recordingStatusElement.classList.add('d-none');
 	return duration;
 }
-
 export function captureImage() {
-	if (isPaused) return;
+    if (isPaused) return;
     isCapturingComplete = false;
     const context = canvasElement.getContext('2d');
     const barHeight = 40;
 
-    canvasElement.width = 240;
-    canvasElement.height = 320;
+    // Get the original video dimensions
+    const videoWidth = videoElement.videoWidth;
+    const videoHeight = videoElement.videoHeight;
 
-    context.drawImage(videoElement, 0, 0);
-    drawOverlay(context, canvasElement.width, canvasElement.height, barHeight);
+    // Calculate the scaling factor to fit within 240x320
+    const scaleFactor = Math.min(240 / videoWidth, 320 / videoHeight);
 
-    const imageDataUrl = canvasElement.toDataURL('image/jpeg', 0.5);
+    // Calculate the new dimensions
+    const newWidth = Math.floor(videoWidth * scaleFactor);
+    const newHeight = Math.floor(videoHeight * scaleFactor);
+
+    // Set canvas size to the new dimensions
+    canvasElement.width = newWidth;
+    canvasElement.height = newHeight;
+
+    // Draw the scaled video frame onto the canvas
+    context.drawImage(videoElement, 0, 0, newWidth, newHeight);
+
+    // Draw the overlay
+    drawOverlay(context, newWidth, newHeight, barHeight);
+
+    const imageDataUrl = canvasElement.toDataURL('image/jpeg', 0.8);
     const imgElement = document.createElement('img');
     imgElement.src = imageDataUrl;
     imgElement.className = 'captured-image';
