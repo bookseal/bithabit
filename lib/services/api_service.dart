@@ -156,6 +156,21 @@ class ApiService {
     }
   }
 
+  // ============ 유저 API ============
+
+  /// Get all registered members
+  static Future<List<Map<String, dynamic>>> getUsers() async {
+    final headers = await _authHeaders();
+    final response = await http.get(Uri.parse('$baseUrl/users'), headers: headers);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.cast<Map<String, dynamic>>();
+    } else {
+      throw Exception('Failed to load members');
+    }
+  }
+
   // ============ 메시지 API ============
 
   /// 메시지 목록 조회

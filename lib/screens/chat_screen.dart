@@ -198,8 +198,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scaffoldKey = GlobalKey<ScaffoldState>();
+
     return Scaffold(
+      key: scaffoldKey,
       backgroundColor: const Color(0xFF0D1B2A),
+      endDrawer: _buildMembersDrawer(),
       appBar: AppBar(
         backgroundColor: const Color(0xFF1B263B),
         automaticallyImplyLeading: false,
@@ -217,6 +221,11 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.people_outline, color: Color(0xFF00D9A5)),
+            onPressed: () => scaffoldKey.currentState?.openEndDrawer(),
+            tooltip: 'Members',
+          ),
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white54),
             onPressed: _loadMessages,
@@ -437,6 +446,139 @@ class _ChatScreenState extends State<ChatScreen> {
                       )
                     : const Icon(Icons.send, color: Color(0xFF0D1B2A)),
                 onPressed: _isSending ? null : _sendMessage,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMembersDrawer() {
+    return Drawer(
+      backgroundColor: const Color(0xFF1B263B),
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
+                border: Border(bottom: BorderSide(color: Color(0xFF253449))),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.people, color: Color(0xFF00D9A5), size: 22),
+                      SizedBox(width: 8),
+                      Text('Members',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  SizedBox(height: 4),
+                  Text('People in this group',
+                      style: TextStyle(color: Colors.white38, fontSize: 12)),
+                ],
+              ),
+            ),
+            // Member list
+            Expanded(
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                future: ApiService.getUsers(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                        child: CircularProgressIndicator(color: Color(0xFF00D9A5)));
+                  }
+                  if (snapshot.hasError || !snapshot.hasData) {
+                    return Center(
+                        child: Text('Failed to load',
+                            style: TextStyle(color: Colors.white.withOpacity(0.5))));
+                  }
+
+                  final users = snapshot.data!;
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: users.length,
+                    itemBuilder: (context, index) {
+                      final user = users[index];
+                      final name = user['username'] ?? '';
+                      final email = user['email'] ?? '';
+                      final isMe = user['id'] == _userId;
+
+                      return ListTile(
+                        leading: CircleAvatar(
+                          radius: 18,
+                          backgroundColor: isMe
+                              ? const Color(0xFF00D9A5)
+                              : const Color(0xFF253449),
+                          child: Text(
+                            name.isNotEmpty ? name[0].toUpperCase() : '?',
+                            style: TextStyle(
+                              color: isMe
+                                  ? const Color(0xFF0D1B2A)
+                                  : Colors.white70,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        title: Row(
+                          children: [
+                            Text(name,
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 14)),
+                            if (isMe) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF00D9A5).withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text('you',
+                                    style: TextStyle(
+                                        color: Color(0xFF00D9A5),
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600)),
+                              ),
+                            ],
+                          ],
+                        ),
+                        subtitle: email.isNotEmpty
+                            ? Text(email,
+                                style: TextStyle(
+                                    color: Colors.white.withOpacity(0.35),
+                                    fontSize: 11))
+                            : null,
+                        dense: true,
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+            // Footer
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: Color(0xFF253449))),
+              ),
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                future: ApiService.getUsers(),
+                builder: (context, snapshot) {
+                  final count = snapshot.data?.length ?? 0;
+                  return Text('$count members',
+                      style: TextStyle(
+                          color: Colors.white.withOpacity(0.35), fontSize: 12));
+                },
               ),
             ),
           ],
