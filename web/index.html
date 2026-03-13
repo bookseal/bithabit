@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="BitHabit - 습관 형성을 위한 출석 체크 앱">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BitHabit">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>BitHabit</title>
+  <link rel="manifest" href="manifest.json">
+
+  <!-- GIF.js 라이브러리 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+
+  <!-- GIF 생성 헬퍼 함수 -->
+  <script>
+    window.createGifFromImages = function(imageDataUrls, onProgress, onComplete, onError) {
+      console.log('[JS GIF] 🚀 createGifFromImages 호출됨');
+      console.log('[JS GIF] 📦 이미지 수:', imageDataUrls ? imageDataUrls.length : 0);
+      
+      try {
+        if (!imageDataUrls || imageDataUrls.length === 0) {
+          console.log('[JS GIF] ❌ 이미지 없음');
+          onError('No images provided');
+          return;
+        }
+
+        // 이미지 로드
+        var loadedImages = [];
+        var loadCount = 0;
+        var totalImages = imageDataUrls.length;
+        
+        console.log('[JS GIF] 📥 이미지 로딩 시작...');
+        
+        for (var i = 0; i < totalImages; i++) {
+          (function(index) {
+            var img = new Image();
+            img.onload = function() {
+              loadedImages[index] = img;
+              loadCount++;
+              console.log('[JS GIF] ✓ 이미지 로드 완료:', loadCount + '/' + totalImages);
+              if (loadCount === totalImages) {
+                startGifCreation(loadedImages.filter(Boolean));
+              }
+            };
+            img.onerror = function() {
+              console.log('[JS GIF] ✗ 이미지 로드 실패:', index);
+              loadCount++;
+              if (loadCount === totalImages) {
+                startGifCreation(loadedImages.filter(Boolean));
+              }
+            };
+            img.src = imageDataUrls[index];
+          })(i);
+        }
+
+        function startGifCreation(images) {
+          console.log('[JS GIF] 🎬 GIF 생성 시작, 이미지 수:', images.length);
+          
+          if (images.length === 0) {
+            console.log('[JS GIF] ❌ 로드된 이미지 없음');
+            onError('No images loaded');
+            return;
+          }
+
+          var firstImage = images[0];
+          console.log('[JS GIF] 📐 크기:', firstImage.naturalWidth, 'x', firstImage.naturalHeight);
+          
+          var gif = new GIF({
+            workers: 2,
+            quality: 10,
+            width: firstImage.naturalWidth,
+            height: firstImage.naturalHeight,
+            workerScript: 'gif.worker.js'
+          });
+
+          console.log('[JS GIF] ➕ 프레임 추가 중...');
+          
+          // 첫 프레임 (1초)
+          gif.addFrame(images[0], {delay: 1000});
+
+          // 나머지 프레임
+          var step = images.length >= 70 ? 2 : 1;
+          var frameDelay = images.length >= 70 ? 200 : 300;
+          
+          for (var j = images.length - 1; j >= 0; j -= step) {
+            gif.addFrame(images[j], {delay: frameDelay});
+          }
+          
+          console.log('[JS GIF] ✓ 프레임 추가 완료');
+
+          gif.on('progress', function(p) {
+            console.log('[JS GIF] 📊 진행률:', Math.round(p * 100) + '%');
+            try {
+              if (typeof onProgress === 'function') {
+                onProgress(p);
+              }
+            } catch (e) {
+              console.log('[JS GIF] ⚠️ onProgress 콜백 에러:', e);
+            }
+          });
+
+          gif.on('finished', function(blob) {
+            console.log('[JS GIF] ✅ GIF 렌더링 완료! Blob 크기:', blob.size);
+            var reader = new FileReader();
+            reader.onloadend = function() {
+              console.log('[JS GIF] 📤 DataURL 변환 완료');
+              try {
+                if (typeof onComplete === 'function') {
+                  onComplete(reader.result);
+                }
+              } catch (e) {
+                console.log('[JS GIF] ⚠️ onComplete 콜백 에러:', e);
+              }
+            };
+            reader.onerror = function() {
+              console.log('[JS GIF] ❌ FileReader 에러');
+              onError('FileReader error');
+            };
+            reader.readAsDataURL(blob);
+          });
+
+          console.log('[JS GIF] 🎥 렌더링 시작...');
+          gif.render();
+        }
+      } catch (e) {
+        console.log('[JS GIF] ❌ 예외 발생:', e);
+        onError(e.toString());
+      }
+    };
+  </script>
+
+  <!-- 배경색 설정 (로딩 중 깜빡임 방지) -->
+  <style>
+    html, body {
+      background-color: #0D1B2A;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+  </style>
+
+  <!-- 서비스 워커 해제 (캐시 문제 방지) -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for (var reg of registrations) {
+          reg.unregister();
+        }
+      });
+    }
+  </script>
+</head>
+<body>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
