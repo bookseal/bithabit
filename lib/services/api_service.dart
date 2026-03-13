@@ -20,6 +20,13 @@ class ApiService {
     return '$protocol//$host/api';
   }
 
+  /// 호스트 URL (uploads 등 정적 파일용, /api 제외)
+  static String get hostUrl {
+    final host = html.window.location.host;
+    final protocol = html.window.location.protocol;
+    return '$protocol//$host';
+  }
+
   // ============ 토큰 관리 ============
 
   /// 저장된 access_token 가져오기

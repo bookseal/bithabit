@@ -332,7 +332,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.network(
-                            '${ApiService.baseUrl}${message.gifUrl}',
+                            '${ApiService.hostUrl}${message.gifUrl}',
                             width: 200,
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => Container(

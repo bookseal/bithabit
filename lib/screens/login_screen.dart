@@ -54,6 +54,9 @@ class _LoginScreenState extends State<LoginScreen> {
       final msg = e.toString().replaceAll('Exception: ', '');
       // 가입되지 않은 이메일 → 회원가입 단계로
       if (msg.contains('가입되지 않은')) {
+        // 이메일 @ 앞부분을 닉네임 기본값으로 설정
+        final email = _emailController.text.trim();
+        _usernameController.text = email.split('@').first;
         setState(() => _step = _LoginStep.register);
       } else {
         setState(() => _errorMessage = msg);
