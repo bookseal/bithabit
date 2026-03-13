@@ -182,9 +182,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         startTime: _startTime!,
         durationMs: _durationMs,
       );
-      _showSnackBar('출석체크 완료!', isSuccess: true);
+      _showSnackBar('Attendance logged!', isSuccess: true);
     } catch (e) {
-      _showSnackBar('출석체크 오류: $e');
+      _showSnackBar('Attendance error: $e');
     }
 
     // GIF 생성
@@ -220,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     try {
       await _cameraService.switchCamera();
     } catch (e) {
-      _showSnackBar('카메라 전환 오류: $e');
+      _showSnackBar('Camera switch error: $e');
     }
   }
 
@@ -325,7 +325,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         debugPrint('[HomeScreen] ✅ GIF 생성 완료!');
       } else {
         debugPrint('[HomeScreen] ❌ GIF 생성 실패 (null 반환)');
-        _showSnackBar('GIF 생성에 실패했습니다.');
+        _showSnackBar('GIF generation failed.');
       }
     } catch (e, stackTrace) {
       debugPrint('[HomeScreen] ❌ GIF 생성 예외: $e');
@@ -333,7 +333,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       setState(() {
         _isCreatingGif = false;
       });
-      _showSnackBar('GIF 생성 오류: $e');
+      _showSnackBar('GIF error: $e');
     }
   }
 
@@ -391,7 +391,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           CircularProgressIndicator(color: Color(0xFF00D9A5)),
           SizedBox(height: 16),
           Text(
-            '카메라 초기화 중...',
+            'Initializing camera...',
             style: TextStyle(color: Colors.white70),
           ),
         ],
@@ -414,7 +414,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             const SizedBox(height: 16),
             Text(
-              _errorMessage ?? '알 수 없는 오류',
+              _errorMessage ?? 'Unknown error',
               style: const TextStyle(color: Colors.white70),
               textAlign: TextAlign.center,
             ),
@@ -422,14 +422,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ElevatedButton.icon(
               onPressed: _initializeCamera,
               icon: const Icon(Icons.refresh),
-              label: const Text('다시 시도'),
+              label: const Text('Retry'),
             ),
             const SizedBox(height: 16),
             // 채팅방 바로가기
             OutlinedButton.icon(
               onPressed: () => _goToChat(),
               icon: const Icon(Icons.chat_bubble_outline),
-              label: const Text('채팅방 바로가기'),
+              label: const Text('Go to Chat'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF00D9A5),
                 side: const BorderSide(color: Color(0xFF00D9A5)),
@@ -552,13 +552,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             IconButton(
               onPressed: () => _goToChat(),
               icon: const Icon(Icons.chat_bubble_outline, color: Color(0xFF00D9A5)),
-              tooltip: '채팅방',
+              tooltip: 'Chat',
             ),
             // 로그아웃 버튼
             IconButton(
               onPressed: _logout,
               icon: const Icon(Icons.logout, color: Colors.white54),
-              tooltip: '로그아웃',
+              tooltip: 'Logout',
             ),
           ],
         ),
@@ -571,8 +571,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return TextField(
       controller: _dailyGoalController,
       decoration: const InputDecoration(
-        labelText: '오늘 공부 목표',
-        hintText: '오늘은 무엇을 공부할까요? (선택)',
+        labelText: "Today's Goal",
+        hintText: 'What are you studying today? (Optional)',
         prefixIcon: Icon(Icons.flag_outlined),
       ),
       enabled: _captureState == CaptureState.idle,
@@ -589,7 +589,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        '캡처된 이미지: ${_captureService.capturedCount}장',
+        'Captured: ${_captureService.capturedCount} frames',
         style: GoogleFonts.inter(
           color: Colors.white70,
           fontSize: 14,
@@ -605,7 +605,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: Column(
         children: [
           Text(
-            'GIF 생성 중... ${(_gifProgress * 100).toInt()}%',
+            'Creating GIF... ${(_gifProgress * 100).toInt()}%',
             style: GoogleFonts.inter(color: Colors.white70),
           ),
           const SizedBox(height: 8),
@@ -650,7 +650,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ElevatedButton.icon(
               onPressed: () => _goToChat(gifBase64: _gifDataUrl),
               icon: const Icon(Icons.share_rounded),
-              label: const Text('채팅방 공유'),
+              label: const Text('Share to Chat'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF4ECDC4),
                 foregroundColor: const Color(0xFF0D1B2A),
@@ -677,13 +677,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         children: [
           Text(
             isIphone
-                ? '1. 위의 움직이는 사진을 오래 누르고 "사진 앱에 저장" 클릭'
-                : '1. 아래의 다운로드 버튼을 눌러 움직이는 사진을 다운로드',
+                ? '1. Long-press the GIF above and tap "Save to Photos"'
+                : '1. Tap the Download button below to save the GIF',
             style: GoogleFonts.inter(color: Colors.white70, fontSize: 14),
           ),
           const SizedBox(height: 8),
           Text(
-            '2. 카카오톡앱 실행 후 해당 오픈채팅방에 움직이는 사진 전송',
+            '2. Share the GIF in your group chat',
             style: GoogleFonts.inter(color: Colors.white70, fontSize: 14),
           ),
         ],

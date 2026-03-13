@@ -167,7 +167,7 @@ class _ChatScreenState extends State<ChatScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('전송 실패: $e')),
+          SnackBar(content: Text('Send failed: $e')),
         );
       }
     } finally {
@@ -220,12 +220,12 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white54),
             onPressed: _loadMessages,
-            tooltip: '새로고침',
+            tooltip: 'Refresh',
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white54),
             onPressed: _logout,
-            tooltip: '로그아웃',
+            tooltip: 'Logout',
           ),
         ],
       ),
@@ -240,7 +240,7 @@ class _ChatScreenState extends State<ChatScreen> {
               child: ElevatedButton.icon(
                 onPressed: _startHabit,
                 icon: const Icon(Icons.play_circle_fill),
-                label: const Text('습관 시작', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                label: const Text('Start Session', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF00D9A5),
                   foregroundColor: const Color(0xFF0D1B2A),
@@ -262,7 +262,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             Icon(Icons.chat_bubble_outline, size: 64, color: Colors.white.withOpacity(0.3)),
                             const SizedBox(height: 16),
                             Text(
-                              '아직 메시지가 없습니다\n첫 메시지를 보내보세요!',
+                              'No messages yet\nSend the first one!',
                               textAlign: TextAlign.center,
                               style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 16),
                             ),
@@ -387,7 +387,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           const SizedBox(width: 12),
-          Expanded(child: Text('GIF 전송 대기 중', style: TextStyle(color: Colors.white.withOpacity(0.7)))),
+          Expanded(child: Text('GIF ready to send', style: TextStyle(color: Colors.white.withOpacity(0.7)))),
           IconButton(
             icon: const Icon(Icons.close, color: Colors.red),
             onPressed: _cancelPendingGif,
@@ -409,7 +409,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 controller: _textController,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: '메시지를 입력하세요...',
+                  hintText: 'Type a message...',
                   hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),

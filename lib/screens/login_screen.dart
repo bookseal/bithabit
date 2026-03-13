@@ -38,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleSendOtp() async {
     final email = _emailController.text.trim();
     if (email.isEmpty || !email.contains('@')) {
-      setState(() => _errorMessage = '올바른 이메일을 입력해주세요');
+      setState(() => _errorMessage = 'Please enter a valid email');
       return;
     }
 
@@ -53,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } on Exception catch (e) {
       final msg = e.toString().replaceAll('Exception: ', '');
       // 가입되지 않은 이메일 → 회원가입 단계로
-      if (msg.contains('가입되지 않은')) {
+      if (msg.contains('not registered') || msg.contains('가입되지 않은')) {
         // 이메일 @ 앞부분을 닉네임 기본값으로 설정
         final email = _emailController.text.trim();
         _usernameController.text = email.split('@').first;
@@ -70,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleVerifyOtp() async {
     final otp = _otpController.text.trim();
     if (otp.length != 6) {
-      setState(() => _errorMessage = '6자리 인증 코드를 입력해주세요');
+      setState(() => _errorMessage = 'Please enter the 6-digit code');
       return;
     }
 
@@ -104,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = _emailController.text.trim();
 
     if (username.length < 2) {
-      setState(() => _errorMessage = '닉네임은 2자 이상이어야 합니다');
+      setState(() => _errorMessage = 'Nickname must be at least 2 characters');
       return;
     }
 
@@ -233,7 +233,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               _otpController.clear();
                             }),
                             child: Text(
-                              '← 이메일 다시 입력',
+                              '← Back to email',
                               style: TextStyle(
                                 color: Colors.white.withOpacity(0.6),
                               ),
@@ -259,16 +259,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
   /// 단계별 자막
   String get _stepSubtitle => switch (_step) {
-        _LoginStep.email => '이메일로 로그인하세요',
-        _LoginStep.otp => '이메일로 발송된 코드를 입력하세요',
-        _LoginStep.register => '처음이시군요! 닉네임을 입력해주세요',
+        _LoginStep.email => 'Sign in with your email',
+        _LoginStep.otp => 'Enter the code sent to your email',
+        _LoginStep.register => 'Welcome! Choose a nickname',
       };
 
   /// 단계별 버튼 라벨
   String get _buttonLabel => switch (_step) {
-        _LoginStep.email => '인증 코드 받기',
-        _LoginStep.otp => '로그인',
-        _LoginStep.register => '가입 후 인증 코드 받기',
+        _LoginStep.email => 'Get Verification Code',
+        _LoginStep.otp => 'Sign In',
+        _LoginStep.register => 'Sign Up & Get Code',
       };
 
   /// 단계별 메인 액션
@@ -283,7 +283,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return switch (_step) {
       _LoginStep.email => _buildTextField(
           controller: _emailController,
-          label: '이메일',
+          label: 'Email',
           hint: 'example@gmail.com',
           icon: Icons.email_outlined,
           keyboardType: TextInputType.emailAddress,
@@ -291,7 +291,6 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       _LoginStep.otp => Column(
           children: [
-            // 발송된 이메일 표시
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -307,7 +306,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '${_emailController.text} 로 코드를 보냈습니다',
+                      'Code sent to ${_emailController.text}',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.8),
                         fontSize: 13,
@@ -320,7 +319,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 16),
             _buildTextField(
               controller: _otpController,
-              label: '인증 코드 6자리',
+              label: 'Verification Code',
               hint: '000000',
               icon: Icons.lock_outline,
               keyboardType: TextInputType.number,
@@ -333,7 +332,7 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             _buildTextField(
               controller: _emailController,
-              label: '이메일',
+              label: 'Email',
               hint: 'example@gmail.com',
               icon: Icons.email_outlined,
               keyboardType: TextInputType.emailAddress,
@@ -342,8 +341,8 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 16),
             _buildTextField(
               controller: _usernameController,
-              label: '닉네임',
-              hint: '2자 이상 입력해주세요',
+              label: 'Nickname',
+              hint: 'At least 2 characters',
               icon: Icons.person_outline,
               onSubmit: _handleRegister,
             ),
@@ -451,7 +450,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            '소규모 스터디 그룹을 위한 습관 추적 & 공유 웹앱',
+            'A habit-tracking & sharing web app for small study groups',
             style: TextStyle(
               color: Colors.white.withOpacity(0.8),
               fontSize: 15,
@@ -472,7 +471,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   size: 14, color: Colors.white.withOpacity(0.35)),
               const SizedBox(width: 6),
               Text(
-                '5명의 스터디 그룹이 실제로 사용 중 · v1.0.0',
+                'Used by a 5-member study group · v1.0.0',
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.35),
                   fontSize: 12,
@@ -487,12 +486,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildFeatureGrid() {
     final features = [
-      ('📸', '공부 타이머', '카메라로 공부 장면 자동 캡처'),
-      ('🎞', 'GIF 생성', '캡처 프레임으로 움직이는 사진 변환'),
-      ('💬', '실시간 채팅', 'WebSocket 기반 팀 채팅 & GIF 공유'),
-      ('🔔', '20분 알림', '20분 공부 시 알림음 + 화면 깜빡임'),
-      ('📊', '출석 체크', 'Google Sheets 자동 기록'),
-      ('✉️', '이메일 인증', '비밀번호 없이 OTP로 로그인'),
+      ('📸', 'Study Timer', 'Auto-capture via webcam while studying'),
+      ('🎞', 'GIF Export', 'Turn captured frames into animated GIF'),
+      ('💬', 'Live Chat', 'WebSocket-based team chat & GIF sharing'),
+      ('🔔', '20-min Alert', 'Beep sound + blink after 20 minutes'),
+      ('📊', 'Attendance', 'Auto-log to Google Sheets on stop'),
+      ('✉️', 'Email Auth', 'Passwordless OTP login, no password'),
     ];
 
     return GridView.count(
@@ -546,7 +545,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('🛠  기술 스택',
+        Text('🛠  Tech Stack',
             style: TextStyle(
                 color: Colors.white.withOpacity(0.7),
                 fontSize: 13,
@@ -588,7 +587,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('🔄  데이터 흐름',
+        Text('🔄  Data Flow',
             style: TextStyle(
                 color: Colors.white.withOpacity(0.7),
                 fontSize: 13,
@@ -605,13 +604,13 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildFlowRow('로그인', '이메일 입력 → OTP 발송 → 코드 입력 → 인증 완료'),
+              _buildFlowRow('Login', 'Email → OTP sent → Enter code → JWT issued'),
               const SizedBox(height: 6),
-              _buildFlowRow('공부 시작', '웹캠 ON → 5초마다 프레임 캡처 → 타이머 측정'),
+              _buildFlowRow('Start', 'Webcam ON → Capture every 5s → Timer running'),
               const SizedBox(height: 6),
-              _buildFlowRow('공부 종료', 'Google Sheets 출석 기록 → GIF 생성'),
+              _buildFlowRow('Stop', 'Google Sheets log → GIF generation'),
               const SizedBox(height: 6),
-              _buildFlowRow('채팅 공유', 'POST /api/messages → WebSocket broadcast'),
+              _buildFlowRow('Share', 'POST /api/messages → WebSocket broadcast'),
             ],
           ),
         ),
