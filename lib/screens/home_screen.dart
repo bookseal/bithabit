@@ -3,12 +3,10 @@ import 'package:flutter/material.dart';
 import 'dart:html' as html;
 import 'dart:async';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../services/camera_service.dart';
 import '../services/capture_service.dart';
-import '../services/attendance_service.dart';
 import '../services/gif_service.dart';
 import '../widgets/camera_preview.dart';
 import '../widgets/timer_display.dart';
@@ -178,18 +176,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       _isBlinking = false;
     });
 
-    // 출석 데이터 전송
+    // 세션 기록 (자체 API)
     try {
-      final attendanceService = context.read<AttendanceService>();
-      await attendanceService.submitAttendance(
-        id: _username,
+      await ApiService.createSession(
         dailyGoal: _dailyGoalController.text,
-        startTime: _startTime!,
-        durationMs: _durationMs,
+        startedAt: _startTime!,
+        durationMin: (_durationMs / 1000 / 60).round(),
       );
-      _showSnackBar('Attendance logged!', isSuccess: true);
+      _showSnackBar('Session logged!', isSuccess: true);
     } catch (e) {
-      _showSnackBar('Attendance error: $e');
+      _showSnackBar('Session error: $e');
     }
 
     // GIF 생성 (카메라 있을 때만)

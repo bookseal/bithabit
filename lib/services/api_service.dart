@@ -171,6 +171,58 @@ class ApiService {
     }
   }
 
+  // ============ Session API ============
+
+  /// Record a study session
+  static Future<void> createSession({
+    required String dailyGoal,
+    required DateTime startedAt,
+    required int durationMin,
+    String? device,
+  }) async {
+    final headers = await _authHeaders();
+    final response = await http.post(
+      Uri.parse('$baseUrl/sessions'),
+      headers: headers,
+      body: jsonEncode({
+        'daily_goal': dailyGoal,
+        'started_at': startedAt.toUtc().toIso8601String(),
+        'duration_min': durationMin,
+        'device': device,
+      }),
+    );
+    if (response.statusCode != 200) {
+      final error = jsonDecode(response.body);
+      throw Exception(error['detail'] ?? 'Session save failed');
+    }
+  }
+
+  /// Get weekly attendance stats for all users
+  static Future<List<Map<String, dynamic>>> getWeeklyStats() async {
+    final headers = await _authHeaders();
+    final response = await http.get(
+      Uri.parse('$baseUrl/sessions/weekly'),
+      headers: headers,
+    );
+    if (response.statusCode == 200) {
+      return (jsonDecode(response.body) as List).cast<Map<String, dynamic>>();
+    }
+    throw Exception('Failed to load weekly stats');
+  }
+
+  /// Get monthly calendar data
+  static Future<Map<String, dynamic>> getCalendar(int year, int month) async {
+    final headers = await _authHeaders();
+    final response = await http.get(
+      Uri.parse('$baseUrl/sessions/calendar?year=$year&month=$month'),
+      headers: headers,
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    throw Exception('Failed to load calendar');
+  }
+
   // ============ 메시지 API ============
 
   /// 메시지 목록 조회

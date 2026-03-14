@@ -259,6 +259,9 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
 
+          // Weekly attendance board
+          _buildWeeklyBoard(),
+
           // 메시지 목록
           Expanded(
             child: _isLoading
@@ -454,6 +457,110 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  Widget _buildWeeklyBoard() {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: ApiService.getWeeklyStats(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox.shrink();
+
+        final stats = snapshot.data!;
+        if (stats.isEmpty) return const SizedBox.shrink();
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          color: const Color(0xFF1B263B),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.calendar_today,
+                      size: 14, color: Color(0xFF00D9A5)),
+                  const SizedBox(width: 6),
+                  Text('This Week',
+                      style: TextStyle(
+                          color: Colors.white.withOpacity(0.6),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600)),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (_) => const _CalendarScreen()),
+                    ),
+                    child: Text('My Calendar →',
+                        style: TextStyle(
+                            color: const Color(0xFF00D9A5).withOpacity(0.7),
+                            fontSize: 11)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: stats.map((s) {
+                  final days = s['days_this_week'] as int;
+                  final name = s['username'] as String;
+                  final mins = s['total_minutes'] as int;
+                  final isMe = s['user_id'] == _userId;
+
+                  return Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: days > 0
+                          ? const Color(0xFF00D9A5).withOpacity(0.15)
+                          : Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: isMe
+                            ? const Color(0xFF00D9A5).withOpacity(0.5)
+                            : Colors.transparent,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(name,
+                            style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 11)),
+                        const SizedBox(width: 4),
+                        // 출석일 수만큼 초록 동그라미
+                        ...List.generate(
+                          7,
+                          (i) => Container(
+                            width: 8,
+                            height: 8,
+                            margin: const EdgeInsets.only(left: 1),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: i < days
+                                  ? const Color(0xFF00D9A5)
+                                  : Colors.white.withOpacity(0.15),
+                            ),
+                          ),
+                        ),
+                        if (mins > 0) ...[
+                          const SizedBox(width: 4),
+                          Text('${mins}m',
+                              style: TextStyle(
+                                  color: Colors.white.withOpacity(0.35),
+                                  fontSize: 9)),
+                        ],
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildMembersDrawer() {
     return Drawer(
       backgroundColor: const Color(0xFF1B263B),
@@ -594,5 +701,222 @@ class _ChatScreenState extends State<ChatScreen> {
       return '${time.month}/${time.day} ${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
     }
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+}
+
+
+/// Personal calendar screen — monthly attendance view
+class _CalendarScreen extends StatefulWidget {
+  const _CalendarScreen();
+
+  @override
+  State<_CalendarScreen> createState() => _CalendarScreenState();
+}
+
+class _CalendarScreenState extends State<_CalendarScreen> {
+  late int _year;
+  late int _month;
+  Map<String, dynamic>? _calendarData;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _year = now.year;
+    _month = now.month;
+    _loadCalendar();
+  }
+
+  Future<void> _loadCalendar() async {
+    setState(() => _isLoading = true);
+    try {
+      final data = await ApiService.getCalendar(_year, _month);
+      setState(() {
+        _calendarData = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _prevMonth() {
+    setState(() {
+      _month--;
+      if (_month < 1) {
+        _month = 12;
+        _year--;
+      }
+    });
+    _loadCalendar();
+  }
+
+  void _nextMonth() {
+    setState(() {
+      _month++;
+      if (_month > 12) {
+        _month = 1;
+        _year++;
+      }
+    });
+    _loadCalendar();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final attended = _calendarData != null
+        ? (_calendarData!['days'] as List)
+            .where((d) => d['attended'] == true)
+            .length
+        : 0;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF0D1B2A),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF1B263B),
+        title: const Text('My Calendar',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        iconTheme: const IconThemeData(color: Colors.white54),
+      ),
+      body: Column(
+        children: [
+          // 월 선택 바
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            color: const Color(0xFF1B263B),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left, color: Colors.white54),
+                  onPressed: _prevMonth,
+                ),
+                Column(
+                  children: [
+                    Text(
+                      '${_monthName(_month)} $_year',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      '$attended days attended',
+                      style: TextStyle(
+                          color: const Color(0xFF00D9A5).withOpacity(0.8),
+                          fontSize: 12),
+                    ),
+                  ],
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right, color: Colors.white54),
+                  onPressed: _nextMonth,
+                ),
+              ],
+            ),
+          ),
+
+          // 요일 헤더
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                  .map((d) => Expanded(
+                        child: Center(
+                          child: Text(d,
+                              style: TextStyle(
+                                  color: Colors.white.withOpacity(0.4),
+                                  fontSize: 11)),
+                        ),
+                      ))
+                  .toList(),
+            ),
+          ),
+
+          // 달력 그리드
+          Expanded(
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF00D9A5)))
+                : _buildCalendarGrid(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCalendarGrid() {
+    if (_calendarData == null) return const SizedBox.shrink();
+
+    final days = _calendarData!['days'] as List;
+    // 월 첫날 요일 (0=Monday)
+    final firstWeekday = DateTime(_year, _month, 1).weekday - 1;
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(12),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 7,
+        crossAxisSpacing: 4,
+        mainAxisSpacing: 4,
+      ),
+      itemCount: firstWeekday + days.length,
+      itemBuilder: (context, index) {
+        if (index < firstWeekday) return const SizedBox.shrink();
+
+        final dayData = days[index - firstWeekday];
+        final day = dayData['day'] as int;
+        final attended = dayData['attended'] as bool;
+        final totalMin = dayData['total_min'] as int;
+        final isToday = DateTime.now().year == _year &&
+            DateTime.now().month == _month &&
+            DateTime.now().day == day;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: attended
+                ? const Color(0xFF00D9A5).withOpacity(0.2)
+                : Colors.white.withOpacity(0.03),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isToday
+                  ? const Color(0xFF00D9A5)
+                  : attended
+                      ? const Color(0xFF00D9A5).withOpacity(0.3)
+                      : Colors.transparent,
+              width: isToday ? 2 : 1,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '$day',
+                style: TextStyle(
+                  color: attended ? Colors.white : Colors.white.withOpacity(0.4),
+                  fontSize: 14,
+                  fontWeight: attended ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+              if (attended)
+                Text(
+                  '${totalMin}m',
+                  style: TextStyle(
+                      color: const Color(0xFF00D9A5).withOpacity(0.8),
+                      fontSize: 9),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String _monthName(int month) {
+    const names = [
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return names[month];
   }
 }
