@@ -38,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // 상태
   CaptureState _captureState = CaptureState.idle;
   bool _isCameraInitialized = false;
+  bool _isFallbackMode = false; // 카메라 없을 때 샘플 이미지 모드
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -108,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
-  /// 카메라 초기화
+  /// 카메라 초기화 — 실패 시 fallback 모드로 자동 전환
   Future<void> _initializeCamera() async {
     setState(() {
       _isLoading = true;
@@ -122,8 +123,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         _isLoading = false;
       });
     } catch (e) {
+      debugPrint('Camera unavailable, switching to fallback mode: $e');
       setState(() {
-        _errorMessage = e.toString();
+        _isFallbackMode = true;
         _isLoading = false;
       });
     }
@@ -142,17 +144,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       _gifDataUrl = null;
     });
 
-    // 타이머 시작
     _startDurationTimer();
 
-    // 캡처 시작
-    _captureService.startCapturing(
-      videoElement: _cameraService.videoElement!,
-      userId: _username,
-      dailyGoal: _dailyGoalController.text,
-      onCapture: () => setState(() {}),
-      getDuration: () => formatDuration(_durationMs),
-    );
+    // 카메라 있으면 실제 캡처, 없으면 타이머만
+    if (_isCameraInitialized && _cameraService.videoElement != null) {
+      _captureService.startCapturing(
+        videoElement: _cameraService.videoElement!,
+        userId: _username,
+        dailyGoal: _dailyGoalController.text,
+        onCapture: () => setState(() {}),
+        getDuration: () => formatDuration(_durationMs),
+      );
+    }
   }
 
   /// 중지
@@ -160,13 +163,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _durationTimer?.cancel();
     _blinkTimer?.cancel();
 
-    // 캡처 중지
-    _captureService.stopCapturing(
-      videoElement: _cameraService.videoElement,
-      userId: _username,
-      dailyGoal: _dailyGoalController.text,
-      getDuration: () => formatDuration(_durationMs),
-    );
+    // 카메라 있으면 캡처 중지
+    if (_isCameraInitialized) {
+      _captureService.stopCapturing(
+        videoElement: _cameraService.videoElement,
+        userId: _username,
+        dailyGoal: _dailyGoalController.text,
+        getDuration: () => formatDuration(_durationMs),
+      );
+    }
 
     setState(() {
       _captureState = CaptureState.finished;
@@ -187,8 +192,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       _showSnackBar('Attendance error: $e');
     }
 
-    // GIF 생성
-    await _createGif();
+    // GIF 생성 (카메라 있을 때만)
+    if (_isCameraInitialized) {
+      await _createGif();
+    }
   }
 
   /// 일시정지/재개
@@ -374,9 +381,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: SafeArea(
           child: _isLoading
               ? _buildLoadingView()
-              : _errorMessage != null
-                  ? _buildErrorView()
-                  : _buildMainView(),
+              : _buildMainView(),
         ),
       ),
     );
@@ -458,12 +463,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               _buildGoalInput(),
               const SizedBox(height: 24),
 
-              // 카메라 프리뷰
+              // 카메라 프리뷰 or 폴백 플레이스홀더
               if (_isCameraInitialized)
                 CameraPreview(
                   viewId: _cameraService.viewId,
                   isRecording: _captureState == CaptureState.capturing,
-                ),
+                )
+              else if (_isFallbackMode)
+                _buildFallbackPreview(),
               const SizedBox(height: 24),
 
               // 타이머
@@ -563,6 +570,53 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ],
         ),
       ],
+    );
+  }
+
+  /// 카메라 없을 때 보여주는 폴백 프리뷰
+  Widget _buildFallbackPreview() {
+    return Container(
+      height: 280,
+      decoration: BoxDecoration(
+        color: const Color(0xFF253449),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: _captureState == CaptureState.capturing
+              ? const Color(0xFF00D9A5)
+              : Colors.white.withOpacity(0.1),
+          width: _captureState == CaptureState.capturing ? 2 : 1,
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              _captureState == CaptureState.capturing
+                  ? Icons.timer
+                  : Icons.videocam_off_rounded,
+              size: 48,
+              color: _captureState == CaptureState.capturing
+                  ? const Color(0xFF00D9A5)
+                  : Colors.white30,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _captureState == CaptureState.capturing
+                  ? 'Timer running (no camera)'
+                  : 'Camera not available',
+              style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _captureState == CaptureState.capturing
+                  ? 'GIF will not be generated'
+                  : 'Timer will work without camera',
+              style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
