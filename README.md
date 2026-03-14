@@ -3,7 +3,40 @@
 > **A habit-tracking web app for small study groups.**  
 > Record study sessions via webcam, auto-generate GIFs, and share progress in real-time chat.
 
-🌐 **Live**: [habit.bit-habit.com](https://habit.bit-habit.com) · 5 active daily users
+🌐 **Live**: [habit.bit-habit.com](https://habit.bit-habit.com) · 5 active daily users  
+📦 **Repo**: [github.com/bookseal/bithabit](https://github.com/bookseal/bithabit)
+
+---
+
+## Screenshots
+
+### Login — Passwordless Email OTP
+<img src="screenshots/01_login.png" width="320" alt="Login screen" />
+
+Enter your email → receive a 6-digit code → sign in. No password needed.  
+New users are auto-directed to a registration step where the email prefix becomes the default nickname.
+
+### Login Page — Built-in About Section
+<img src="screenshots/02_login_about.png" width="320" alt="Login with About section" />
+
+Below the login form, the app renders an interactive **About BitHabit** section directly in the UI:
+
+- **Feature grid** — 6 cards: Study Timer, GIF Export, Live Chat, 20-min Alert, Attendance, Email Auth
+- **Tech stack chips** — Flutter Web, Dart, FastAPI, Python, SQLite, WebSocket, Gmail SMTP, gif.js
+- **Data flow summary** — Login → Start → Stop → Share, each step explained in one line
+
+This serves as both a portfolio showcase and user onboarding — visitors see what the app does before signing up.
+
+### Chat Room — Real-time Messaging
+<!-- To add: capture from a real browser with camera permission -->
+The chat screen features:
+- **"Start Session" button** — navigates to the webcam timer screen
+- **Message list** — text and GIF messages with sender avatars, timestamps
+- **WebSocket real-time** — new messages appear instantly for all connected users
+- **Members drawer** — tap the 👥 icon to see all registered members with `you` badge
+
+### Study Timer — Webcam + GIF Pipeline
+The home screen activates the webcam, runs a study timer, captures frames every 5 seconds, and generates an animated GIF on stop. The GIF can be downloaded or shared directly to the chat room.
 
 ---
 
@@ -27,35 +60,40 @@
 graph TB
     subgraph Client [Flutter Web - Dart]
         A[Login Screen] -->|email input| B[OTP Verification]
-        B -->|verified| C[Home Screen]
+        B -->|JWT issued| C[Home Screen]
         C -->|webcam frames| D[Capture Service]
         D -->|captured images| E[GIF Service - gif.js]
         C -->|navigate| F[Chat Screen]
         F -->|WebSocket| G[Live Messages]
+        F -->|open drawer| H[Members List]
     end
 
     subgraph Server [FastAPI - Python]
-        H[POST /api/auth/send-otp]
-        I[POST /api/auth/verify-otp]
-        J[POST /api/auth/register]
-        K[GET /api/messages]
-        L[POST /api/messages]
-        M[WS /api/ws]
+        I[POST /api/auth/send-otp]
+        J[POST /api/auth/verify-otp]
+        K[POST /api/auth/register]
+        L[GET /api/auth/me]
+        M[POST /api/auth/refresh]
+        N[GET /api/messages]
+        O[POST /api/messages]
+        P[GET /api/users]
+        Q[WS /api/ws]
     end
 
     subgraph Infra [Kubernetes k3s]
-        N[Traefik Ingress] -->|/api/*| O[bithabit-api Pod]
-        N -->|/*| P[nginx Pod - Flutter static]
-        O --> Q[(SQLite)]
-        O --> R[Gmail SMTP]
+        R[Traefik Ingress] -->|/api/*| S[bithabit-api Pod]
+        R -->|/*| T[nginx Pod - Flutter static]
+        S --> U[(SQLite)]
+        S --> V[Gmail SMTP]
     end
 
-    A -->|POST| H
-    B -->|POST| I
-    F -->|GET| K
-    F -->|POST + GIF base64| L
-    F -->|connect| M
-    M -->|broadcast| G
+    A -->|POST| I
+    B -->|POST| J
+    F -->|GET| N
+    F -->|POST + GIF base64| O
+    F -->|connect| Q
+    Q -->|broadcast| G
+    H -->|GET| P
 ```
 
 ---
@@ -139,6 +177,7 @@ sequenceDiagram
 | Auto-login | `api_service.dart` | `tryAutoLogin()` | Tries access → falls back to refresh → clears on failure |
 | Logout | `api_service.dart` | `clearTokens()` | Removes all tokens + user data from localStorage |
 | Auth header | `api_service.dart` | `_authHeaders()` | Injects `Authorization: Bearer` into every API request |
+| Members list | `api_service.dart` | `getUsers()` | Fetches all registered users for the members drawer |
 
 **Design choices:**
 - **7-day access token** — users access ~5x/week, so 7 days means they rarely need to re-authenticate
@@ -184,10 +223,11 @@ sequenceDiagram
 ```
 bithabit_flutter/               # Frontend
 ├── lib/
+│   ├── main.dart               # App entry, AuthWrapper (auto-login logic)
 │   ├── screens/
 │   │   ├── login_screen.dart   # Email → OTP → Register (3-step flow)
 │   │   ├── home_screen.dart    # Camera + Timer + GIF generation
-│   │   └── chat_screen.dart    # Real-time chat with WebSocket
+│   │   └── chat_screen.dart    # Real-time chat + Members drawer
 │   ├── services/
 │   │   ├── api_service.dart    # REST API client + JWT token management
 │   │   ├── camera_service.dart # getUserMedia wrapper
@@ -199,6 +239,7 @@ bithabit_api/                   # Backend
 ├── main.py                     # FastAPI app, endpoints + JWT auth + WebSocket
 ├── models.py                   # SQLAlchemy models (User, Message)
 ├── database.py                 # SQLite connection
+├── requirements.txt            # python-jose, fastapi, sqlalchemy, etc.
 └── Dockerfile                  # Production container image
 ```
 
