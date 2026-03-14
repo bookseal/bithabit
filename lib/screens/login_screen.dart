@@ -422,225 +422,330 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  /// 프로젝트 소개 섹션
+  /// 플랫폼 소개 섹션
   Widget _buildAboutSection() {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 500),
+      constraints: const BoxConstraints(maxWidth: 520),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                  child: Divider(color: Colors.white.withOpacity(0.15))),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  'About BitHabit',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.4),
-                    fontSize: 12,
-                    letterSpacing: 1.5,
-                  ),
-                ),
-              ),
-              Expanded(
-                  child: Divider(color: Colors.white.withOpacity(0.15))),
-            ],
-          ),
+          // 구분선
+          _buildDivider('About habit.bit-habit'),
           const SizedBox(height: 24),
+
+          // 플랫폼 소개
           Text(
-            'A habit-tracking & sharing web app for small study groups',
+            'A habit-building platform where small groups stay accountable together.',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
-              fontSize: 15,
+              color: Colors.white.withOpacity(0.85),
+              fontSize: 16,
               fontWeight: FontWeight.w500,
+              height: 1.5,
             ),
           ),
-          const SizedBox(height: 20),
-          _buildFeatureGrid(),
+          const SizedBox(height: 8),
+          Text(
+            'Start a study session, let the webcam capture your focus, '
+            'and share an auto-generated GIF with your team — '
+            'all in real-time.',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.5),
+              fontSize: 13,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 28),
+
+          // How it works
+          _buildDivider('How It Works'),
+          const SizedBox(height: 16),
+          _buildStepCards(),
+          const SizedBox(height: 28),
+
+          // 기술 스택 + 왜 이 기술인지
+          _buildDivider('Tech Stack & Why'),
+          const SizedBox(height: 16),
+          _buildTechWithReason(),
+          const SizedBox(height: 28),
+
+          // 아키텍처 요약
+          _buildDivider('Architecture'),
+          const SizedBox(height: 16),
+          _buildArchSection(),
+          const SizedBox(height: 28),
+
+          // 인증 설명
+          _buildDivider('Authentication'),
+          const SizedBox(height: 16),
+          _buildAuthSection(),
           const SizedBox(height: 24),
-          _buildTechStack(),
-          const SizedBox(height: 24),
-          _buildFlowSection(),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.people_outline,
-                  size: 14, color: Colors.white.withOpacity(0.35)),
-              const SizedBox(width: 6),
-              Text(
-                'Used by a 5-member study group · v1.0.0',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.35),
-                  fontSize: 12,
+
+          // 푸터
+          Center(
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.people_outline,
+                        size: 14, color: Colors.white.withOpacity(0.3)),
+                    const SizedBox(width: 6),
+                    Text('Active study group · v1.0.0',
+                        style: TextStyle(
+                            color: Colors.white.withOpacity(0.3),
+                            fontSize: 11)),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 6),
+                Text('github.com/bookseal/bithabit',
+                    style: TextStyle(
+                        color: Colors.white.withOpacity(0.25),
+                        fontSize: 10)),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFeatureGrid() {
-    final features = [
-      ('📸', 'Study Timer', 'Auto-capture via webcam while studying'),
-      ('🎞', 'GIF Export', 'Turn captured frames into animated GIF'),
-      ('💬', 'Live Chat', 'WebSocket-based team chat & GIF sharing'),
-      ('🔔', '20-min Alert', 'Beep sound + blink after 20 minutes'),
-      ('📊', 'Attendance', 'Auto-log to Google Sheets on stop'),
-      ('✉️', 'Email Auth', 'Passwordless OTP login, no password'),
+  Widget _buildDivider(String label) {
+    return Row(
+      children: [
+        Expanded(child: Divider(color: Colors.white.withOpacity(0.12))),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(label,
+              style: TextStyle(
+                  color: Colors.white.withOpacity(0.4),
+                  fontSize: 11,
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w500)),
+        ),
+        Expanded(child: Divider(color: Colors.white.withOpacity(0.12))),
+      ],
+    );
+  }
+
+  /// 4-step flow
+  Widget _buildStepCards() {
+    final steps = [
+      ('1', '📧', 'Sign in with email', 'No password. A 6-digit code is sent to your inbox, verified with JWT.'),
+      ('2', '📸', 'Start a session', 'Your webcam captures frames every few seconds while the timer runs.'),
+      ('3', '🎞', 'Auto-generate GIF', 'When you stop, gif.js compiles the frames into an animated GIF — all client-side.'),
+      ('4', '💬', 'Share with your team', 'Post your GIF to the live chat. WebSocket delivers it to everyone instantly.'),
     ];
 
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 10,
-      mainAxisSpacing: 10,
-      childAspectRatio: 3.2,
-      children: features
-          .map((f) => Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(10),
-                  border:
-                      Border.all(color: Colors.white.withOpacity(0.08)),
-                ),
-                child: Row(
-                  children: [
-                    Text(f.$1, style: const TextStyle(fontSize: 18)),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(f.$2,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600)),
-                          Text(f.$3,
-                              style: TextStyle(
-                                  color: Colors.white.withOpacity(0.5),
-                                  fontSize: 10),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ))
-          .toList(),
-    );
-  }
-
-  Widget _buildTechStack() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('🛠  Tech Stack',
-            style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
-                fontSize: 13,
-                fontWeight: FontWeight.w600)),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _buildChip('Flutter Web', const Color(0xFF54C5F8)),
-            _buildChip('Dart', const Color(0xFF00B4AB)),
-            _buildChip('FastAPI', const Color(0xFF009688)),
-            _buildChip('Python', const Color(0xFFFFD54F)),
-            _buildChip('SQLite', const Color(0xFF80CBC4)),
-            _buildChip('WebSocket', const Color(0xFFCE93D8)),
-            _buildChip('Gmail SMTP', const Color(0xFFEF9A9A)),
-            _buildChip('gif.js', const Color(0xFFFF8A65)),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildChip(String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4)),
-      ),
-      child: Text(label,
-          style: TextStyle(
-              color: color, fontSize: 11, fontWeight: FontWeight.w500)),
-    );
-  }
-
-  Widget _buildFlowSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('🔄  Data Flow',
-            style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
-                fontSize: 13,
-                fontWeight: FontWeight.w600)),
-        const SizedBox(height: 10),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.04),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.white.withOpacity(0.08)),
+      children: steps.map((s) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.04),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.white.withOpacity(0.07)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(s.$2, style: const TextStyle(fontSize: 22)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Step ${s.$1}  ${s.$3}',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 3),
+                      Text(s.$4,
+                          style: TextStyle(
+                              color: Colors.white.withOpacity(0.5),
+                              fontSize: 11,
+                              height: 1.4)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          child: Column(
+        );
+      }).toList(),
+    );
+  }
+
+  /// 기술 스택 + 선택 이유
+  Widget _buildTechWithReason() {
+    final techs = [
+      ('Flutter Web', const Color(0xFF54C5F8), 'Single codebase for web & mobile. Dart compiles to JS with canvas rendering.'),
+      ('FastAPI', const Color(0xFF009688), 'Python async framework. Auto-generates OpenAPI docs, native WebSocket support.'),
+      ('JWT', const Color(0xFFFFD54F), 'Stateless auth — server validates tokens without DB lookup. 7-day access + 30-day refresh.'),
+      ('WebSocket', const Color(0xFFCE93D8), 'Full-duplex real-time: server broadcasts new messages to all connected clients instantly.'),
+      ('gif.js', const Color(0xFFFF8A65), 'Client-side GIF encoding in a Web Worker. Zero server compute for media processing.'),
+      ('SQLite', const Color(0xFF80CBC4), 'Lightweight file-based DB. No separate server needed — perfect for small-scale apps.'),
+      ('Gmail SMTP', const Color(0xFFEF9A9A), 'Passwordless OTP via Gmail App Password. Free, ~500 emails/day, no external service.'),
+      ('Kubernetes', const Color(0xFF90CAF9), 'k3s cluster with Traefik Ingress. Auto TLS, rolling deploys, zero-downtime updates.'),
+    ];
+
+    return Column(
+      children: techs.map((t) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildFlowRow('Login', 'Email → OTP sent → Enter code → JWT issued'),
-              const SizedBox(height: 6),
-              _buildFlowRow('Start', 'Webcam ON → Capture every 5s → Timer running'),
-              const SizedBox(height: 6),
-              _buildFlowRow('Stop', 'Google Sheets log → GIF generation'),
-              const SizedBox(height: 6),
-              _buildFlowRow('Share', 'POST /api/messages → WebSocket broadcast'),
+              Container(
+                margin: const EdgeInsets.only(top: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: t.$2.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: t.$2.withOpacity(0.3)),
+                ),
+                child: Text(t.$1,
+                    style: TextStyle(
+                        color: t.$2,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600)),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(t.$3,
+                    style: TextStyle(
+                        color: Colors.white.withOpacity(0.5),
+                        fontSize: 11,
+                        height: 1.4)),
+              ),
             ],
           ),
-        ),
-      ],
+        );
+      }).toList(),
     );
   }
 
-  Widget _buildFlowRow(String step, String desc) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-          decoration: BoxDecoration(
-            color: const Color(0xFF00D9A5).withOpacity(0.2),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(step,
-              style: const TextStyle(
-                  color: Color(0xFF00D9A5),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600)),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(desc,
+  /// 아키텍처
+  Widget _buildArchSection() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withOpacity(0.07)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('habit.bit-habit.com',
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.55), fontSize: 11)),
-        ),
-      ],
+                  color: const Color(0xFF00D9A5).withOpacity(0.8),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'monospace')),
+          const SizedBox(height: 8),
+          _buildArchRow('Traefik Ingress', 'TLS termination, path-based routing'),
+          _buildArchRow('/api/*  →  FastAPI Pod', 'REST + WebSocket + JWT auth'),
+          _buildArchRow('/*  →  nginx Pod', 'Serves Flutter build/web as static files'),
+          _buildArchRow('SQLite (hostPath)', 'Users, messages, OTP codes'),
+          _buildArchRow('Uploads (hostPath)', 'User-generated GIF files'),
+          const SizedBox(height: 8),
+          Text(
+            'flutter build web deploys instantly — nginx serves directly from the build directory via Kubernetes hostPath volume.',
+            style: TextStyle(
+                color: Colors.white.withOpacity(0.35),
+                fontSize: 10,
+                fontStyle: FontStyle.italic,
+                height: 1.4),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildArchRow(String label, String desc) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('▸ ', style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 11)),
+          Text('$label  ',
+              style: TextStyle(
+                  color: Colors.white.withOpacity(0.7),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500)),
+          Expanded(
+            child: Text(desc,
+                style: TextStyle(
+                    color: Colors.white.withOpacity(0.4), fontSize: 10)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 인증
+  Widget _buildAuthSection() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withOpacity(0.07)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Passwordless — Email OTP + JWT',
+              style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(height: 10),
+          _buildAuthRow('No passwords stored', 'Users verify via 6-digit email code (5 min expiry)'),
+          _buildAuthRow('JWT access token', '7-day expiry — auto-login for weekly users'),
+          _buildAuthRow('JWT refresh token', '30-day expiry — silent renewal, no re-login'),
+          _buildAuthRow('Stateless validation', 'HS256 signature check only, no DB query per request'),
+          _buildAuthRow('Auto-login flow', 'access → refresh fallback → re-auth if both expired'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAuthRow(String title, String desc) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.check_circle_outline,
+              size: 13, color: Color(0xFF00D9A5)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: TextStyle(
+                    color: Colors.white.withOpacity(0.5),
+                    fontSize: 11,
+                    height: 1.3),
+                children: [
+                  TextSpan(
+                      text: '$title — ',
+                      style: TextStyle(
+                          color: Colors.white.withOpacity(0.7),
+                          fontWeight: FontWeight.w500)),
+                  TextSpan(text: desc),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
