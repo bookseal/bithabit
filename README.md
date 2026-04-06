@@ -1,10 +1,42 @@
 # 🕐 BitHabit
 
-> **A habit-tracking web app for small study groups.**  
+> **A habit-tracking app for small study groups.**  
 > Record study sessions via webcam, auto-generate GIFs, and share progress in real-time chat.
 
-🌐 **Live**: [habit.bit-habit.com](https://habit.bit-habit.com) · 5 active daily users  
-📦 **Repo**: [github.com/bookseal/bithabit](https://github.com/bookseal/bithabit)
+🌐 **Live**: [habit.bit-habit.com](https://habit.bit-habit.com)  
+📦 **Repo**: [github.com/bookseal/bithabit](https://github.com/bookseal/bithabit)  
+🏆 **2nd Place — IITP Hackathon** · Users still active after 2 years
+
+---
+
+## Why This Exists
+
+Habit apps like Challengers focus on growing user numbers, but sacrifice **proof quality**. In a "walk the stairs" challenge, just taking a photo of stairs counts as proof. That's too easy to fake.
+
+What people actually need is proof that they **focused for 20+ minutes** — and a way to share it that's lightweight and trustworthy.
+
+### BitHabit vs Challengers
+
+| | Challengers | BitHabit |
+|---|---|---|
+| Proof method | Single photo | **Time-lapse video (random interval captures)** |
+| Fake risk | High (reuse old photos) | **Low (date/name overlay + random timing)** |
+| File size | N/A | **Much smaller than video (GIF)** |
+| Group size | Large (less accountability) | **Small (3-5 people, real accountability)** |
+| Still used after 2 years? | — | **Yes** |
+
+---
+
+## Core Flow
+
+```mermaid
+flowchart LR
+    A["Start Session\nActivate webcam"] --> B["Every 5 seconds\nCapture frame via Canvas"]
+    B --> C["Stop\ngif.js (Web Worker)"]
+    C --> D["Generate GIF\n+ date/name overlay"]
+    D --> E["Share to chat\nbase64 via POST"]
+    E --> F["WebSocket broadcast\nAll users see it instantly"]
+```
 
 ---
 
@@ -13,44 +45,20 @@
 ### Login — Passwordless Email OTP
 <img src="screenshots/01_login.png" width="320" alt="Login screen" />
 
-Enter your email → receive a 6-digit code → sign in. No password needed.  
-New users are auto-directed to a registration step where the email prefix becomes the default nickname.
+Enter email → get a 6-digit code → sign in. No password needed.
 
 ### Login Page — Built-in About Section
 <img src="screenshots/02_login_about.png" width="320" alt="Login with About section" />
 
-Below the login form, the app renders an interactive **About BitHabit** section directly in the UI:
-
-- **Feature grid** — 6 cards: Study Timer, GIF Export, Live Chat, 20-min Alert, Attendance, Email Auth
-- **Tech stack chips** — Flutter Web, Dart, FastAPI, Python, SQLite, WebSocket, Gmail SMTP, gif.js
-- **Data flow summary** — Login → Start → Stop → Share, each step explained in one line
-
-This serves as both a portfolio showcase and user onboarding — visitors see what the app does before signing up.
+The login page doubles as a portfolio — feature cards, tech stack, and data flow are shown before signup.
 
 ### Chat Room — Real-time Messaging
-<!-- To add: capture from a real browser with camera permission -->
-The chat screen features:
-- **"Start Session" button** — navigates to the webcam timer screen
-- **Message list** — text and GIF messages with sender avatars, timestamps
-- **WebSocket real-time** — new messages appear instantly for all connected users
-- **Members drawer** — tap the 👥 icon to see all registered members with `you` badge
+- **"Start Session" button** — opens the webcam timer
+- **WebSocket real-time** — messages appear instantly for everyone
+- **Members drawer** — tap 👥 to see all members
 
-### Study Timer — Webcam + GIF Pipeline
-The home screen activates the webcam, runs a study timer, captures frames every 5 seconds, and generates an animated GIF on stop. The GIF can be downloaded or shared directly to the chat room.
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | **Flutter Web** (Dart) — single codebase for web/mobile |
-| Backend | **FastAPI** (Python) — async REST API + WebSocket |
-| Database | **SQLite** via SQLAlchemy ORM |
-| Auth | **Email OTP + JWT** — passwordless, stateless token auth |
-| Real-time | **WebSocket** broadcast for live chat |
-| GIF Engine | **gif.js** (client-side, Web Worker-based) |
-| Infra | **Kubernetes (k3s)** + Traefik Ingress + HTTPS |
+### Study Timer — Webcam + GIF
+Webcam activates, timer runs, frames are captured every 5 seconds. On stop, a GIF is generated and can be shared to the chat room.
 
 ---
 
@@ -58,137 +66,80 @@ The home screen activates the webcam, runs a study timer, captures frames every 
 
 ```mermaid
 graph TB
-    subgraph Client [Flutter Web - Dart]
-        A[Login Screen] -->|email input| B[OTP Verification]
-        B -->|JWT issued| C[Home Screen]
-        C -->|webcam frames| D[Capture Service]
-        D -->|captured images| E[GIF Service - gif.js]
-        C -->|navigate| F[Chat Screen]
+    subgraph Client ["Flutter Web (Dart)"]
+        A[Login Screen] -->|email| B[OTP Verification]
+        B -->|JWT| C[Home Screen]
+        C -->|webcam| D[Capture Service]
+        D -->|frames| E[GIF Service - gif.js]
+        C --> F[Chat Screen]
         F -->|WebSocket| G[Live Messages]
-        F -->|open drawer| H[Members List]
+        F --> H[Members List]
     end
 
-    subgraph Server [FastAPI - Python]
+    subgraph Server ["FastAPI (Python)"]
         I[POST /api/auth/send-otp]
         J[POST /api/auth/verify-otp]
-        K[POST /api/auth/register]
-        L[GET /api/auth/me]
-        M[POST /api/auth/refresh]
         N[GET /api/messages]
         O[POST /api/messages]
-        P[GET /api/users]
         Q[WS /api/ws]
     end
 
-    subgraph Infra [Kubernetes k3s]
+    subgraph Infra ["Kubernetes (k3s)"]
         R[Traefik Ingress] -->|/api/*| S[bithabit-api Pod]
         R -->|/*| T[nginx Pod - Flutter static]
         S --> U[(SQLite)]
         S --> V[Gmail SMTP]
     end
 
-    A -->|POST| I
-    B -->|POST| J
-    F -->|GET| N
-    F -->|POST + GIF base64| O
-    F -->|connect| Q
-    Q -->|broadcast| G
-    H -->|GET| P
+    A --> I
+    B --> J
+    F --> N
+    F -->|GIF base64| O
+    F --> Q
+    Q --> G
 ```
 
 ---
 
-## Auth — Email OTP + JWT Token System
+## Auth — Email OTP + JWT
 
-Zero passwords. Users prove identity via email OTP, then receive JWT tokens for persistent sessions.
-
-### Login Flow (OTP → JWT issuance)
+No passwords. Users verify their email with a one-time code, then get JWT tokens.
 
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant F as Flutter<br/>login_screen.dart
-    participant API as FastAPI<br/>main.py
+    participant F as Flutter
+    participant API as FastAPI
     participant DB as SQLite
     participant G as Gmail SMTP
 
     U->>F: Enter email
     F->>API: POST /api/auth/send-otp
-    API->>API: generate_otp() → 6-digit code
-    API->>DB: Save otp_code + otp_expires_at (5 min)
-    API->>G: send_otp_email() via SMTP
+    API->>API: Generate 6-digit OTP
+    API->>DB: Save OTP + expiry (5 min)
+    API->>G: Send via SMTP
     G-->>U: 📧 "Code: 483921"
-    U->>F: Enter 6-digit code
-    F->>API: POST /api/auth/verify-otp {email, otp}
-    API->>DB: Check otp_code match + expiry
-    API->>API: create_access_token() → 7-day JWT
-    API->>API: create_refresh_token() → 30-day JWT
+    U->>F: Enter OTP
+    F->>API: POST /api/auth/verify-otp
+    API->>DB: Check match + expiry
+    API->>API: Create JWT (Access 7d + Refresh 30d)
     API-->>F: {user, access_token, refresh_token}
-    F->>F: saveTokens() → SharedPreferences
-    F->>F: Navigate to HomeScreen
+    F->>F: Save tokens locally
+    F->>F: Go to ChatScreen
 ```
 
-### Auto-Login Flow (token-based, no re-authentication)
+### Why these token lifetimes?
 
-Users stay logged in for up to 30 days without re-entering email/OTP.
-
-```mermaid
-sequenceDiagram
-    participant F as Flutter<br/>main.dart → AuthWrapper
-    participant S as SharedPreferences<br/>(localStorage)
-    participant API as FastAPI<br/>main.py
-
-    F->>S: Read access_token
-    alt access_token exists
-        F->>API: GET /api/auth/me<br/>Authorization: Bearer {token}
-        API->>API: verify_token() → decode JWT
-        alt Token valid (within 7 days)
-            API-->>F: {id, username} ✅
-            F->>F: Navigate to ChatScreen
-        else Token expired
-            F->>S: Read refresh_token
-            F->>API: POST /api/auth/refresh
-            API->>API: verify_token() → check type=refresh
-            alt Refresh valid (within 30 days)
-                API->>API: create_access_token() + create_refresh_token()
-                API-->>F: New token pair ✅
-                F->>S: saveTokens()
-                F->>F: Navigate to ChatScreen
-            else Refresh expired
-                API-->>F: 401 Unauthorized
-                F->>S: clearTokens()
-                F->>F: Show LoginScreen
-            end
-        end
-    else No token
-        F->>F: Show LoginScreen
-    end
-```
-
-### JWT Implementation Details
-
-| Component | File | Function | Description |
-|-----------|------|----------|-------------|
-| Token creation | `main.py` | `create_access_token()` | HS256-signed JWT, 7-day expiry, payload: `{sub, username, type}` |
-| Token creation | `main.py` | `create_refresh_token()` | HS256-signed JWT, 30-day expiry, payload: `{sub, type}` |
-| Token verification | `main.py` | `verify_token()` | Decodes + validates signature and expiry via `python-jose` |
-| Route protection | `main.py` | `get_current_user()` | FastAPI `Depends()` — extracts Bearer token → returns `User` |
-| Token storage | `api_service.dart` | `saveTokens()` | Saves both tokens to `SharedPreferences` (browser localStorage) |
-| Auto-login | `api_service.dart` | `tryAutoLogin()` | Tries access → falls back to refresh → clears on failure |
-| Logout | `api_service.dart` | `clearTokens()` | Removes all tokens + user data from localStorage |
-| Auth header | `api_service.dart` | `_authHeaders()` | Injects `Authorization: Bearer` into every API request |
-| Members list | `api_service.dart` | `getUsers()` | Fetches all registered users for the members drawer |
-
-**Design choices:**
-- **7-day access token** — users access ~5x/week, so 7 days means they rarely need to re-authenticate
-- **30-day refresh token** — even if they skip a week, they stay logged in
-- **HS256 signing** — symmetric key, simple for single-server deployment
-- **Stateless** — server never stores tokens; validation is pure signature check (no DB query)
-- **Graceful degradation** — message API accepts requests with or without JWT for backward compatibility
+| Decision | Value | Why |
+|---|---|---|
+| Access token | 7 days | Users visit ~5x/week — rarely need to re-auth |
+| Refresh token | 30 days | Skip a week and still stay logged in |
+| Algorithm | HS256 | Simple, enough for single-server setup |
+| Server-side storage | None (stateless) | Pure signature check, no DB query needed |
 
 ---
 
-## Study Session → GIF Pipeline
+## GIF Pipeline — $0 Server Cost
 
 ```mermaid
 sequenceDiagram
@@ -201,47 +152,35 @@ sequenceDiagram
     U->>Cam: Start (getUserMedia)
     loop Every 5 seconds
         Cam->>Cap: Capture frame via Canvas
+        Cap->>Cap: Add date/name overlay
     end
-    U->>Cap: Stop
-    Cap->>GIF: Pass captured frames (data URLs)
+    U->>Cap: Stop (or 20-min auto-alert)
+    Cap->>GIF: Send frames (data URLs)
     GIF->>GIF: Web Worker renders GIF
     GIF-->>U: Preview + Download
-    U->>Chat: Share GIF (base64 via POST /api/messages)
-    Chat->>Chat: WebSocket broadcasts to all users
+    U->>Chat: Share GIF (base64 POST)
+    Chat->>Chat: WebSocket broadcasts to all
 ```
 
-**Technical highlights:**
-- **Client-side GIF generation** — no server compute needed; gif.js runs in a Web Worker
-- **Canvas-based frame capture** — `drawImage()` from `<video>` element every 5s
-- **20-minute alert** — AudioContext oscillator beep + CSS blink animation
-- **Camera switch** — `facingMode` toggle between `user` and `environment`
+**Key design choices:**
+- **Client-side GIF** — gif.js runs in a Web Worker. Server does zero work
+- **Date/name overlay** — Canvas `drawText()` prevents reusing others' recordings
+- **20-minute alert** — beep + blink animation when time is up
+- **Random capture timing** — harder to game with pre-recorded content
 
 ---
 
-## Project Structure
+## Tech Stack
 
-```
-bithabit_flutter/               # Frontend
-├── lib/
-│   ├── main.dart               # App entry, AuthWrapper (auto-login logic)
-│   ├── screens/
-│   │   ├── login_screen.dart   # Email → OTP → Register (3-step flow)
-│   │   ├── home_screen.dart    # Camera + Timer + GIF generation
-│   │   └── chat_screen.dart    # Real-time chat + Members drawer
-│   ├── services/
-│   │   ├── api_service.dart    # REST API client + JWT token management
-│   │   ├── camera_service.dart # getUserMedia wrapper
-│   │   ├── capture_service.dart# Periodic frame capture (Canvas)
-│   │   └── gif_service.dart    # gif.js JS interop
-│   └── widgets/                # Reusable UI components
-│
-bithabit_api/                   # Backend
-├── main.py                     # FastAPI app, endpoints + JWT auth + WebSocket
-├── models.py                   # SQLAlchemy models (User, Message)
-├── database.py                 # SQLite connection
-├── requirements.txt            # python-jose, fastapi, sqlalchemy, etc.
-└── Dockerfile                  # Production container image
-```
+| Layer | Technology | Why |
+|-------|-----------|-----|
+| Frontend | **Flutter Web** (Dart) | One codebase for web and mobile |
+| Backend | **FastAPI** (Python) | Async REST + WebSocket |
+| Database | **SQLite** + SQLAlchemy | Lightweight, fits single server |
+| Auth | **Email OTP + JWT** | No passwords, stateless |
+| Real-time | **WebSocket** broadcast | Live chat |
+| GIF Engine | **gif.js** (Web Worker) | Runs on client, $0 server cost |
+| Infra | **k3s** + Traefik + HTTPS | Production Kubernetes |
 
 ---
 
@@ -250,24 +189,48 @@ bithabit_api/                   # Backend
 ```
 habit.bit-habit.com
     │
-    ├── Traefik Ingress (TLS termination)
-    │     ├── /api/*  →  bithabit-api Pod (FastAPI, port 8000)
-    │     └── /*      →  static-web Pod (nginx, Flutter build/web)
+    ├── Traefik Ingress (TLS)
+    │     ├── /api/*  →  bithabit-api Pod (FastAPI :8000)
+    │     └── /*      →  static-web Pod (nginx, Flutter build)
     │
-    ├── bithabit-api Deployment
-    │     ├── Docker image: bithabit-api:latest
+    ├── bithabit-api
     │     ├── Env: GMAIL_ADDRESS, GMAIL_APP_PASSWORD, JWT_SECRET
-    │     └── Volume: hostPath → /data/bithabit.db + /data/uploads/
+    │     └── Volume: /data/bithabit.db + /data/uploads/
     │
-    └── static-web Deployment
-          └── Volume: hostPath → bithabit_flutter/build/web/
+    └── static-web
+          └── Volume: Flutter build/web/
 ```
-
-`flutter build web` → files are live instantly (nginx serves from hostPath mount).
 
 ---
 
-## Local Development
+## Project Structure
+
+```
+bithabit_flutter/               # Frontend
+├── lib/
+│   ├── main.dart               # Entry + auto-login logic
+│   ├── screens/
+│   │   ├── login_screen.dart   # Email → OTP → Register
+│   │   ├── home_screen.dart    # Camera + Timer + GIF
+│   │   └── chat_screen.dart    # Real-time chat + Members
+│   ├── services/
+│   │   ├── api_service.dart    # REST client + JWT
+│   │   ├── camera_service.dart # getUserMedia wrapper
+│   │   ├── capture_service.dart# Frame capture
+│   │   └── gif_service.dart    # gif.js interop
+│   └── widgets/
+
+bithabit_api/                   # Backend
+├── main.py                     # FastAPI + JWT + WebSocket
+├── models.py                   # SQLAlchemy models
+├── database.py                 # SQLite connection
+├── requirements.txt
+└── Dockerfile
+```
+
+---
+
+## Run Locally
 
 ```bash
 # Backend
@@ -275,10 +238,14 @@ cd bithabit_api
 pip install -r requirements.txt
 uvicorn main:app --host 0.0.0.0 --port 8080
 
-# Frontend (dev mode)
+# Frontend (dev)
 cd bithabit_flutter
 flutter pub get && flutter run -d chrome
 
-# Frontend (production build)
-flutter build web  # → build/web/
+# Frontend (production)
+flutter build web
 ```
+
+---
+
+Built with Flutter + FastAPI. Deployed via k3s on Oracle OCI.
